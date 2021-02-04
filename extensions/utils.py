@@ -44,6 +44,12 @@ class UtilsCog(commands.Cog):
         except Exception as e:
             await self.trace_exception("It's only a test")
             
+    @commands.command(name='show_settings')
+    @commands.check(perms.is_support_user)
+    async def crash_log(self, ctx):
+        await self.bot_log_message("Settings")
+        await self.bot_log_message("-------")
+        await self.bot_log_message(self.settings.as_string())
 
 
         
