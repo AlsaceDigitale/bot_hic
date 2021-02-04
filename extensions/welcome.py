@@ -1,8 +1,11 @@
 import re
 import discord
+from . import perms
 from discord.ext import commands
 
 class WelcomeCog(commands.Cog):
+    enabled_module = True
+
     guild = None
     users = []
 
@@ -44,18 +47,20 @@ class WelcomeCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        dm_channel = member.dm_channel
 
-        if dm_channel is None:
-            dm_channel = await member.create_dm()
+        if(self.enabled_module):
+            dm_channel = member.dm_channel
 
-        msg = (
-            f"Bonjour {member.mention} vous débarquez ici, on dirait !\n"
-            f"Je suis {self.bot.user.mention}, je suis un gentil robot et je vais vous accompagner\n"
-            f"Tout d’abord pouvez-vous me donner l’adresse mail avec laquelle vous vous êtes inscrit(e) à l’évènement"
-        )
+            if dm_channel is None:
+                dm_channel = await member.create_dm()
 
-        await dm_channel.send(msg)
+            msg = (
+                f"Bonjour {member.mention} vous débarquez ici, on dirait !\n"
+                f"Je suis {self.bot.user.mention}, je suis un gentil robot et je vais vous accompagner\n"
+                f"Tout d’abord pouvez-vous me donner l’adresse mail avec laquelle vous vous êtes inscrit(e) à l’évènement"
+            )
+
+            await dm_channel.send(msg)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -105,6 +110,21 @@ class WelcomeCog(commands.Cog):
 
         if channel_id == self.channel_bdd_users.id:
             await self.loadUsers()
+
+    @commands.command(name='enable_welcome')
+    @commands.check(perms.is_support_user)
+    async def enable_welcome(self, ctx):
+        self.enable_welcome = True
+        utils_cog = self.bot.get_cog('UtilsCog')
+        await utils_cog.bot_log_message('Module Welcome activé')
+
+    @commands.command(name='disable_welcome')
+    @commands.check(perms.is_support_user)
+    async def enable_welcome(self, ctx):
+        self.enable_welcome = False
+        utils_cog = self.bot.get_cog('UtilsCog')
+        await utils_cog.bot_log_message('Module Welcome desactivé')
+
 
 def setup(bot):
     bot.add_cog(WelcomeCog(bot))
