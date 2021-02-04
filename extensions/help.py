@@ -5,6 +5,16 @@ class HelpCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        utils_cog = self.bot.get_cog('UtilsCog')
+        for guild in self.bot.guilds:
+            if guild.name.startswith('HIC 2021'):
+                self.guild = guild
+        self.channel_help = discord.utils.find(lambda c: c.name == utils_cog.settings.CHANNEL_HELP, guild.channels)
+        self.channel_support = discord.utils.find(lambda c: c.name == utils_cog.settings.CHANNEL_SUPPORT, guild.channels)
+
+
     @commands.command(name='aide')
     async def help(self, ctx):
         """
@@ -29,5 +39,53 @@ class HelpCog(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command(name='orga')
+    async def orga(self, ctx):
+        """
+        Commande: !orga
+        Argument: /
+        
+        Appelle à l'aide un organisateur dans le salon "demande d'aide"
+        """
+        
+        utils_cog = self.bot.get_cog('UtilsCog')
+        organisateurs = discord.utils.find(lambda c: c.name == utils_cog.settings.ORGA_ROLE, self.guild.roles)        
+
+        await self.channel_help.send(f"{ctx.author.mention} appelle le groupe {organisateurs.mention} à l'aide dans le salon {ctx.message.channel.mention} !")
+        await ctx.message.add_reaction('\U0001F9BE')
+
+
+    @commands.command(name='coach')
+    async def coach(self, ctx):
+        """
+        Commande: !coach
+        Argument: /
+        
+        Appelle à l'aide un coach dans le salon "demande d'aide"
+        """
+        
+        utils_cog = self.bot.get_cog('UtilsCog')
+        organisateurs = discord.utils.find(lambda c: c.name == utils_cog.settings.COACH_ROLE, self.guild.roles)        
+
+        await self.channel_help.send(f"{ctx.author.mention} appelle le groupe {organisateurs.mention} à l'aide dans le salon {ctx.message.channel.mention} !")
+        await ctx.message.add_reaction('\U0001F9BE')
+
+
+    @commands.command(name='support')
+    async def support(self, ctx):
+        """
+        Commande: !support
+        Argument: /
+        
+        Appelle à l'aide un support dans le salon "support technique"
+        """
+        
+        utils_cog = self.bot.get_cog('UtilsCog')
+        organisateurs = discord.utils.find(lambda c: c.name == utils_cog.settings.ADMIN_ROLE, self.guild.roles)        
+
+        await self.channel_support.send(f"{ctx.author.mention} appelle le groupe {organisateurs.mention} à l'aide dans le salon {ctx.message.channel.mention} !")
+        await ctx.message.add_reaction('\U0001F9BE')
+
+  
 def setup(bot):
     bot.add_cog(HelpCog(bot))
