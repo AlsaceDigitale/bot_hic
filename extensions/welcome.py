@@ -15,13 +15,14 @@ class WelcomeCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.utils_cog = self.bot.get_cog('UtilsCog')
 
     @commands.Cog.listener()
     async def on_ready(self):
         for guild in self.bot.guilds:
             if guild.name.startswith('HIC 2021'):
                 self.guild = guild
+
+        self.utils_cog = self.bot.get_cog('UtilsCog')
 
         self.channel_welcome = discord.utils.find(lambda c: c.name == 'bienvenue', guild.channels)
         self.channel_help = discord.utils.find(lambda c: c.name == 'demandes-aide', guild.channels)
