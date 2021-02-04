@@ -4,8 +4,6 @@ from discord.ext import commands
 from . import perms
 
 class WelcomeCog(commands.Cog):
-    utils_cog = None
-
     guild = None
     users = []
 
@@ -21,8 +19,6 @@ class WelcomeCog(commands.Cog):
         for guild in self.bot.guilds:
             if guild.name.startswith('HIC 2021'):
                 self.guild = guild
-
-        self.utils_cog = self.bot.get_cog('UtilsCog')
 
         self.channel_welcome = discord.utils.find(lambda c: c.name == 'bienvenue', guild.channels)
         self.channel_help = discord.utils.find(lambda c: c.name == 'demandes-aide', guild.channels)
@@ -54,7 +50,9 @@ class WelcomeCog(commands.Cog):
         if dm_channel is None:
             dm_channel = await member.create_dm()
 
-        if self.utils_cog.settings.WELCOME_MODE == 'open':
+        utils_cog = self.bot.get_cog('UtilsCog')
+
+        if utils_cog.settings.WELCOME_MODE == 'open':
             msg = (
                 f"Bonjour {member.mention} vous débarquez ici, on dirait !\n"
                 f"Je suis {self.bot.user.mention}, je suis un gentil robot et je vais vous accompagner\n"
@@ -62,7 +60,7 @@ class WelcomeCog(commands.Cog):
             )
 
             await dm_channel.send(msg)
-        elif self.utils_cog.settings.WELCOME_MODE == 'close':
+        elif utils_cog.settings.WELCOME_MODE == 'close':
             msg = (
                 f"Bonjour {member.mention} vous débarquez ici, on dirait !\n"
                 f"Je suis {self.bot.user.mention}, je suis le gentil robot du Hacking Industry Camp\n\n"
@@ -85,11 +83,12 @@ class WelcomeCog(commands.Cog):
                 await channel.send("Vous n'êtez pas présent sur le serveur HIC 2021 !")
                 return
 
-            
             if len(member.roles) <= 1:
                 content = message.content.strip()
 
-                if self.utils_cog.settings.WELCOME_MODE == 'open':
+                utils_cog = self.bot.get_cog('UtilsCog')
+
+                if utils_cog.settings.WELCOME_MODE == 'open':
                     if not re.search('^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$', content):
                         await channel.send("Je n'ai pas compris votre message :'(\nMerci de m'envoyer l'adresse email saisie lors de votre inscription au HIC.")
                         return
@@ -117,7 +116,7 @@ class WelcomeCog(commands.Cog):
                     ))
 
                     await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du Hacking Industry Camp !")
-                elif self.utils_cog.settings.WELCOME_MODE == 'close':
+                elif utils_cog.settings.WELCOME_MODE == 'close':
                     await channel.send((
                         f"Bonjour,\n"
                         f"Je ne suis pas en mesure de vous répondre avant le lancement du Hacking Industry Camp :'(\n"
@@ -138,7 +137,9 @@ class WelcomeCog(commands.Cog):
         Envoie un message à toutes les personnes qui n'ont pas de grade
         """
 
-        if self.utils_cog.settings.WELCOME_MODE == 'close':
+        utils_cog = self.bot.get_cog('UtilsCog')
+
+        if utils_cog.settings.WELCOME_MODE == 'close':
             await ctx.send(f"Le mode Welcome est fermé !")
             return
 
