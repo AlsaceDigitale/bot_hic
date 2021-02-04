@@ -42,7 +42,9 @@ class PollCog(commands.Cog):
     @commands.check(perms.is_support_user)
     async def new_poll(self, ctx, question: str,maxvotes: int=1, *options: str):
         """
-        Faire un nouveau sondage.
+        (Support uniquement) Faire un nouveau sondage dans le canal réservé. 
+        Afin de terminer le sondage, il vous faudra faire `!closepoll <id>` ou <id> est l'identifiant du sondage 
+        (indiqué en bas du sondage).
         """
         
         utils_cog = self.bot.get_cog('UtilsCog')
@@ -96,7 +98,7 @@ class PollCog(commands.Cog):
     @commands.check(perms.is_support_user)
     async def reset_poll(self, ctx, id: int):
         """
-        Reset un poll identifié par `id`. l'`id` d'un vote se trouve sous chaque vote
+        (Support uniquement) Remet tous les compteurs à un pour un sondage avec identifiant `id`. l'`id` d'un vote se trouve sous chaque vote.
         """
         
         utils_cog = self.bot.get_cog('UtilsCog')
@@ -128,7 +130,7 @@ class PollCog(commands.Cog):
     @commands.check(perms.is_support_user)
     async def destroy_poll(self, ctx, id: int):
         """
-        Détruit un sondage définitivement. Attention! Fonctionne sur tout type de message.
+        (Support uniquement) détruit un sondage définitivement. Attention! Fonctionne sur tout type de message, ne vous trompez pas dans l'`id`!
         """
         
         utils_cog = self.bot.get_cog('UtilsCog')
@@ -151,6 +153,8 @@ class PollCog(commands.Cog):
     @commands.check(perms.is_support_user)
     async def close_poll(self, ctx, id: int):
         """
+        (Support uniquement) Terminer un sondage identifié par `id`. Le résultat sera inséré sous le sondage, les réactions sont remises à zéro et 
+        toutes les réactions sont dorénavants accessibles.
         """
         
         utils_cog = self.bot.get_cog('UtilsCog')
