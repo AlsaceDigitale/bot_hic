@@ -18,6 +18,10 @@ class TeamCog(commands.Cog):
                 if isinstance(error, commands.BadArgument) or (isinstance(error, commands.MissingRequiredArgument)):
                     await message.add_reaction('\U0001F44E')
                     await ctx.send("Erreur! La commande est du type `!teamadd nom_de_lequipe membre1 [membreX...]`")
+            elif ctx.command.name == 'teamremove':
+                if isinstance(error, commands.BadArgument) or (isinstance(error, commands.MissingRequiredArgument)):
+                    await message.add_reaction('\U0001F44E')
+                    await ctx.send("Erreur! La commande est du type `!teamremove nom_de_lequipe membre1 [membreX...]`")
             elif ctx.command.name == 'teamup':
                 if isinstance(error, commands.BadArgument) or (isinstance(error, commands.MissingRequiredArgument)):
                     await message.add_reaction('\U0001F44E')
@@ -44,9 +48,46 @@ class TeamCog(commands.Cog):
             await message.add_reaction('\U0001F44E')
             await ctx.send(f"seuls les admins ({utils_cog.settings.ADMIN_ROLE}) peuvent faire cette action!")
             return
+
+        if not nom_de_lequipe.name.startswith(utils_cog.settings.TEAM_PREFIX):
+            await message.add_reaction('\U0001F44E')
+            await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
+            return
+
         
         for member in members:
             await member.add_roles(nom_de_lequipe)
+            await ctx.message.add_reaction('\U0001F9BE')
+
+    @commands.command(name='teamremove')
+    @commands.check(perms.is_support_user)
+    async def teamremove(self, ctx, nom_de_lequipe: discord.Role, members: commands.Greedy[discord.Member]):
+        """"
+        Commande: !teamremove
+        Argument: nom_de_lequipe membre1 [membreX...]
+
+        Enlever des participants à une équipe.
+        """
+        
+        utils_cog = self.bot.get_cog('UtilsCog')
+
+        message = ctx.message
+        author = ctx.author
+        role_names = [r.name for  r in author.roles]
+
+        if utils_cog.settings.ADMIN_ROLE not in role_names:
+            await message.add_reaction('\U0001F44E')
+            await ctx.send(f"seuls les admins ({utils_cog.settings.ADMIN_ROLE}) peuvent faire cette action!")
+            return
+
+        if not nom_de_lequipe.name.startswith(utils_cog.settings.TEAM_PREFIX):
+            await message.add_reaction('\U0001F44E')
+            await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
+            return
+
+        
+        for member in members:
+            await member.remove_roles(nom_de_lequipe)
             await ctx.message.add_reaction('\U0001F9BE')
                 
     @commands.command(name='teamup')
@@ -61,6 +102,7 @@ class TeamCog(commands.Cog):
         
         utils_cog = self.bot.get_cog('UtilsCog')
         
+        
         message = ctx.message
         author = ctx.author
         server: discord.Guild = ctx.guild
@@ -70,6 +112,12 @@ class TeamCog(commands.Cog):
             await message.add_reaction('\U0001F44E')
             await ctx.send(f"seuls les admins ({utils_cog.settings.ADMIN_ROLE}) peuvent faire cette action!")
             return
+
+        if not nom_de_lequipe.startswith(utils_cog.settings.TEAM_PREFIX):
+            await message.add_reaction('\U0001F44E')
+            await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
+            return
+
         
         serv_roles = await server.fetch_roles()
         
@@ -81,7 +129,7 @@ class TeamCog(commands.Cog):
                                                 reason="admin through bot")
         else:
             await message.add_reaction('\U0001F44E')
-            await ctx.send(f"L'équipe {nom_de_lequipe} existe déjà. Utilisez `!teamadd` pour rajouter des membres.")
+            await ctx.send(f"L'{nom_de_lequipe} existe déjà. Utilisez `!teamadd` pour rajouter des membres.")
             return
         
         # check if chefdeproj role already exists. If not, creates it.
@@ -104,7 +152,7 @@ class TeamCog(commands.Cog):
         
         await message.add_reaction('\U0001F9BE')
         
-        msg = (f"Tout le monde a été rajouté dans l'équipe {teamrole.name}, et "
+        msg = (f"Tout le monde a été rajouté dans l'{teamrole.name}, et "
                 f"{chef_de_projet.name} "
                 f"a été rajouté aux {cdp_role.name}.\n"
                 " il ne manque plus qu'un salon!")
