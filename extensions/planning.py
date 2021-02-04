@@ -22,6 +22,11 @@ class PlanningCog(commands.Cog):
         
         Donne le planning et le lien vers le PDF.
         """
+        member = ctx.author
+        dm_channel = member.dm_channel
+
+        if dm_channel is None:
+            dm_channel = await member.create_dm()
 
         embed = discord.Embed()
         embed.add_field(name="Lien", value=self.PLANNING_URL)
@@ -75,7 +80,8 @@ class PlanningCog(commands.Cog):
             
             embed.add_field(name=field_name,value=msg)
             
-        await ctx.send(embed=embed)
+        await dm_channel.send(embed=embed)
+        await ctx.message.add_reaction('\U0001F9BE')
 
 def setup(bot):
     bot.add_cog(PlanningCog(bot))
