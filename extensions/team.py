@@ -214,6 +214,82 @@ class TeamCog(commands.Cog):
         await ctx.send(msg)
         
         await utils_cog.bot_log_message(f'Creation team <@&{teamrole.id}> OK')
+
+
+
+####SUPERCOACH
+
+    @commands.command(name='teamcoachadd')
+    @commands.check(perms.is_support_or_supercoach_user)
+    async def teamcoachadd(self, ctx, nom_de_lequipe: discord.Role, member: discord.Member):
+        """"
+        Commande: !teamcoachadd
+        Argument: nom_de_lequipe membre
+
+        Rajouter un coach à une équipe.
+        """
+        
+        utils_cog = self.bot.get_cog('UtilsCog')
+
+        message = ctx.message
+        author = ctx.author
+        role_names = [r.name for  r in author.roles]
+        member_role_names = [r.name for  r in member.roles]
+
+        if (utils_cog.settings.ADMIN_ROLE not in role_names) and (utils_cog.settings.SUPER_COACH_ROLE not in role_names):
+            await message.add_reaction('\U0001F44E')
+            await ctx.send(f"Seuls les admins ({utils_cog.settings.ADMIN_ROLE}) et les Super Coach ({utils_cog.settings.SUPER_COACH_ROLE}) peuvent faire cette action!")
+            return
+
+        if not nom_de_lequipe.name.startswith(utils_cog.settings.TEAM_PREFIX):
+            await message.add_reaction('\U0001F44E')
+            await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
+            return
+
+        if (utils_cog.settings.COACH_ROLE not in member_role_names) and (utils_cog.settings.SUPER_COACH_ROLE not in member_role_names) and (utils_cog.settings.FACILITATEUR_ROLE not in member_role_names) :
+            await message.add_reaction('\U0001F44E')
+            await ctx.send(f"Seuls les coachs, les Super Coach et les facilitateurs peuvent se faire ajouter à des équipe !")
+            return
+        
+
+        await member.add_roles(nom_de_lequipe)
+        await ctx.message.add_reaction('\U0001F9BE')
+
+    @commands.command(name='teamcoachremove')
+    @commands.check(perms.is_support_or_supercoach_user)
+    async def teamcoachremove(self, ctx, nom_de_lequipe: discord.Role, member: discord.Member):
+        """"
+        Commande: !teamcoachremove
+        Argument: nom_de_lequipe membre
+
+        Enlever un coach d'une équipe.
+        """
+        
+        utils_cog = self.bot.get_cog('UtilsCog')
+
+        message = ctx.message
+        author = ctx.author
+        role_names = [r.name for  r in author.roles]
+        member_role_names = [r.name for  r in member.roles]
+
+        if (utils_cog.settings.ADMIN_ROLE not in role_names) and (utils_cog.settings.SUPER_COACH_ROLE not in role_names):
+            await message.add_reaction('\U0001F44E')
+            await ctx.send(f"Seuls les Admins ({utils_cog.settings.ADMIN_ROLE}) et les Super Coach ({utils_cog.settings.SUPER_COACH_ROLE}) peuvent faire cette action!")
+            return
+
+        if not nom_de_lequipe.name.startswith(utils_cog.settings.TEAM_PREFIX):
+            await message.add_reaction('\U0001F44E')
+            await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
+            return
+
+        if (utils_cog.settings.COACH_ROLE not in member_role_names) and (utils_cog.settings.SUPER_COACH_ROLE not in member_role_names) and (utils_cog.settings.FACILITATEUR_ROLE not in member_role_names) :
+            await message.add_reaction('\U0001F44E')
+            await ctx.send(f"Seuls les coachs, les Super Coach et les facilitateurs peuvent se faire retirer à des équipe !")
+            return
+        
+        
+        await member.remove_roles(nom_de_lequipe)
+        await ctx.message.add_reaction('\U0001F9BE')
         
         
 
