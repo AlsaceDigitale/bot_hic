@@ -59,6 +59,8 @@ class WelcomeCog(commands.Cog):
                 f"Je suis {self.bot.user.mention}, je suis un gentil robot et je vais vous accompagner\n"
                 f"Tout d’abord pouvez-vous me donner l’adresse mail avec laquelle vous vous êtes inscrit(e) à l’évènement"
             )
+
+            await dm_channel.send(msg)
         elif self.utils_cog.settings.WELCOME_MODE == 'close':
             msg = (
                 f"Bonjour {member.mention} vous débarquez ici, on dirait !\n"
@@ -66,7 +68,7 @@ class WelcomeCog(commands.Cog):
                 f"L'évenement n'a pas encore débuté ! Je reviendrai vers vous lors du lancement du HIC."
             )
         
-        await dm_channel.send(msg)
+            await dm_channel.send(msg)
 
     @commands.Cog.listener()
     async def on_message(self, message):
