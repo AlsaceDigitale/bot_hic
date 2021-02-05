@@ -45,9 +45,9 @@ class WelcomeCog(commands.Cog):
 
                 if len(data) >= 4:
                     self.users.append({
-                        'name': data[0].strip(),
-                        'firstname': data[1].strip(),
-                        'mail': data[2].strip(),
+                        'name': data[0].strip().upper(),
+                        'firstname': f"{data[1].strip()[0].upper()}{data[1].strip()[1:].lower()}",
+                        'mail': data[2].strip().lower(),
                         'role': data[3].strip()
                     })
     
@@ -61,7 +61,7 @@ class WelcomeCog(commands.Cog):
             if len(data) >= 2:
                 self.users_link.append({
                     'discord_id': int(data[0].strip()[3:-1]),
-                    'mail': data[1].strip(),
+                    'mail': data[1].strip().lower(),
                 })
 
     @commands.Cog.listener()
@@ -187,6 +187,25 @@ class WelcomeCog(commands.Cog):
 
                 await dm_channel.send(msg)
 
+    @commands.command(name='users')
+    @commands.check(perms.is_support_user)
+    async def users(self, ctx):
+        """
+        Affiche le nombre de personnes par Rôles
+        """
+        roles_count = dict()
+
+        for user in self.users:
+            if user['role'] not in roles_count:
+                roles_count[user['role']] = 1
+            else:            
+                roles_count[user['role']] += 1
+
+        msg = "Nombre d'utilisateur par rôle :\n"
+        for role, count in roles_count.items():
+            msg += f"  - {role}: {count}\n"
+        
+        await ctx.send(msg)
 
 def setup(bot):
     bot.add_cog(WelcomeCog(bot))
