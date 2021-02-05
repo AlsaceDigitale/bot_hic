@@ -11,6 +11,8 @@ class Settings:
         self.TEAM_PREFIX=os.getenv('BOT_TEAM_PREFIX', 'Equipe-') 
         self.CHANNEL_HELP=os.getenv('BOT_CHANNEL_HELP', 'demandes-aide') 
         self.CHANNEL_SUPPORT=os.getenv('BOT_CHANNEL_SUPPORT', 'support-technique')
+        self.CHANNEL_VOTE=os.getenv('BOT_CHANNEL_VOTE', 'votes')
+        self.PARTICIPANT_ROLE=os.getenv('BOT_PARTICIPANT_ROLE', 'Participant')
         
     def as_string(self):
         ret=""
