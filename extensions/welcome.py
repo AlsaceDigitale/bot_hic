@@ -108,7 +108,7 @@ class WelcomeCog(commands.Cog):
                 content = message.content.strip()
 
                 if self.utils_cog.settings.WELCOME_MODE == 'open':
-                    if not re.search('^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$', content):
+                    if not re.search('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', content):
                         await channel.send("Je n'ai pas compris votre message :'(\nMerci de m'envoyer l'adresse email saisie lors de votre inscription au HIC.")
                         return
 
