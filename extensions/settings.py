@@ -11,3 +11,11 @@ class Settings:
         self.TEAM_PREFIX=os.getenv('BOT_TEAM_PREFIX', 'Equipe-') 
         self.CHANNEL_HELP=os.getenv('BOT_CHANNEL_HELP', 'demandes-aide') 
         self.CHANNEL_SUPPORT=os.getenv('BOT_CHANNEL_SUPPORT', 'support-technique')
+        
+    def as_string(self):
+        ret=""
+        for k,v in self.__dict__.items():
+            if not k.startswith('_') and k.upper()==k:
+               ret+=f"{k}={v}\n"
+               
+        return ret
