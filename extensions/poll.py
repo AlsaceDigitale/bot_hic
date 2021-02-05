@@ -9,8 +9,10 @@ class PollCog(commands.Cog):
     Sondages
     """
     REACTIONS_YESNO = ['✅', '❌']
-    REACTIONS_MULTI = ['1⃣', '2⃣', '3⃣', '4⃣', '5⃣', '6⃣', '7⃣', '8⃣', '9⃣', '🔟']
-    VOTING_CHANNEL_ID = 805511910920683530
+    REACTIONS_MULTI = ['1⃣', '2⃣', '4⃣', '5⃣', '6⃣', '7⃣', '8⃣', '9⃣', '🔵','🔷','💙','#⃣','▶']
+    
+    
+
 
     def __init__(self, bot):
         self.bot = bot
@@ -46,15 +48,20 @@ class PollCog(commands.Cog):
         Afin de terminer le sondage, il vous faudra faire `!closepoll <id>` ou <id> est l'identifiant du sondage 
         (indiqué en bas du sondage).
         """
+       
         
         utils_cog = self.bot.get_cog('UtilsCog')
 
         message = ctx.message
         author = ctx.author
         role_names = [r.name for  r in author.roles]
-        
-        voting_channel = discord.utils.get(self.bot.get_all_channels(), id=VOTING_CHANNEL_ID)
-        
+ 
+        for guild in self.bot.guilds:
+            if guild.name.startswith('HIC 2021'):
+                self.guild = guild       
+        voting_channel = discord.utils.find(lambda c: c.name == utils_cog.settings.CHANNEL_VOTE, guild.channels)
+
+
         if utils_cog.settings.ADMIN_ROLE not in role_names:
             await message.add_reaction('\U0001F44E')
             await ctx.send("seuls les admins peuvent faire cette action!")
@@ -62,7 +69,7 @@ class PollCog(commands.Cog):
         if len(options) <= 1:
             await ctx.send('Il vous faut au minimum une option')
             return
-        if len(options) > 10:
+        if len(options) > 15:
             await ctx.send("Trop d'options")
             return
         
@@ -107,6 +114,9 @@ class PollCog(commands.Cog):
         author = ctx.author
         role_names = [r.name for  r in author.roles]
 
+        if utils_cog.settings.PARTICIPANT_ROLE not in role_names:
+            return
+
         print(role_names)
 
         if utils_cog.settings.ADMIN_ROLE not in role_names:
@@ -114,9 +124,12 @@ class PollCog(commands.Cog):
             await ctx.send("seuls les admins peuvent faire cette action!")
             return
         
+        print(id)
         called_msg = await ctx.fetch_message(id)
 
-        if called_msg.author != bot.user:
+        print("ici")
+
+        if called_msg.author != self.bot.user:
             #chek whether bot actually posted the reacted message, otherwise ignores
             return
         
@@ -193,21 +206,33 @@ class PollCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
+        utils_cog = self.bot.get_cog('UtilsCog')
         message = reaction.message
         channel = message.channel
         emoji = reaction.emoji
 
+        for guild in self.bot.guilds:
+            if guild.name.startswith('HIC 2021'):
+                self.guild = guild       
+        voting_channel = discord.utils.find(lambda c: c.name == utils_cog.settings.CHANNEL_VOTE, guild.channels)
+
         number_of_votes = 0
 
-        if channel.id != self.VOTING_CHANNEL_ID:
+        role_names = [r.name for  r in user.roles]
+        if utils_cog.settings.PARTICIPANT_ROLE not in role_names:
+            await reaction.remove(user)
+            await channel.send(f'<@!{user.id}> n\'a pas le droit de vote')
+            return
+
+        if channel.id != voting_channel.id:
             #reacts only on vote channel are processed
             return
         
-        if message.author != bot.user:
+        if message.author != self.bot.user:
             #chek whether bot actually posted the reacted message, otherwise ignores
             return
         
-        if user == bot.user:
+        if user == self.bot.user:
             #ignores if it is the bot voting
             return
         
