@@ -5,11 +5,15 @@ from . import perms
 
 class WelcomeCog(commands.Cog):
     guild = None
+    utils_cog = None
+
     users = []
+    users_link = []
 
     channel_welcome = None
     channel_help = None
     channel_bdd_users = None
+    channel_bdd_users_link = None
 
     def __init__(self, bot):
         self.bot = bot
@@ -20,11 +24,15 @@ class WelcomeCog(commands.Cog):
             if guild.name.startswith('HIC 2021'):
                 self.guild = guild
 
+        self.utils_cog = self.bot.get_cog('UtilsCog')
+
         self.channel_welcome = discord.utils.find(lambda c: c.name == 'bienvenue', guild.channels)
         self.channel_help = discord.utils.find(lambda c: c.name == 'demandes-aide', guild.channels)
         self.channel_bdd_users = discord.utils.find(lambda c: c.name == 'users', guild.channels)
+        self.channel_bdd_users_link = discord.utils.find(lambda c: c.name == 'users_link', guild.channels)
 
         await self.loadUsers()
+        await self.loadUsersLink()
 
     async def loadUsers(self):
         self.users = []
@@ -42,6 +50,19 @@ class WelcomeCog(commands.Cog):
                         'mail': data[2].strip(),
                         'role': data[3].strip()
                     })
+    
+    async def loadUsersLink(self):
+        self.users_link = []
+
+        async for message in self.channel_bdd_users_link.history(limit=None):
+            content = message.content
+            data = content.split(',')
+
+            if len(data) >= 2:
+                self.users_link.append({
+                    'discord_id': int(data[0].strip()[3:-1]),
+                    'mail': data[1].strip(),
+                })
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -50,9 +71,7 @@ class WelcomeCog(commands.Cog):
         if dm_channel is None:
             dm_channel = await member.create_dm()
 
-        utils_cog = self.bot.get_cog('UtilsCog')
-
-        if utils_cog.settings.WELCOME_MODE == 'open':
+        if self.utils_cog.settings.WELCOME_MODE == 'open':
             msg = (
                 f"Bonjour {member.mention} vous débarquez ici, on dirait !\n"
                 f"Je suis {self.bot.user.mention}, je suis un gentil robot et je vais vous accompagner\n"
@@ -60,7 +79,7 @@ class WelcomeCog(commands.Cog):
             )
 
             await dm_channel.send(msg)
-        elif utils_cog.settings.WELCOME_MODE == 'close':
+        elif self.utils_cog.settings.WELCOME_MODE == 'close':
             msg = (
                 f"Bonjour {member.mention} vous débarquez ici, on dirait !\n"
                 f"Je suis {self.bot.user.mention}, je suis le gentil robot du Hacking Industry Camp\n\n"
@@ -75,6 +94,8 @@ class WelcomeCog(commands.Cog):
 
         if channel == self.channel_bdd_users:
             await self.loadUsers()
+        elif channel == self.channel_bdd_users_link:
+            await self.loadUsersLink()
         elif isinstance(channel, discord.DMChannel):
             author = message.author
             member = self.guild.get_member(author.id)
@@ -86,9 +107,7 @@ class WelcomeCog(commands.Cog):
             if len(member.roles) <= 1:
                 content = message.content.strip()
 
-                utils_cog = self.bot.get_cog('UtilsCog')
-
-                if utils_cog.settings.WELCOME_MODE == 'open':
+                if self.utils_cog.settings.WELCOME_MODE == 'open':
                     if not re.search('^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$', content):
                         await channel.send("Je n'ai pas compris votre message :'(\nMerci de m'envoyer l'adresse email saisie lors de votre inscription au HIC.")
                         return
@@ -116,7 +135,8 @@ class WelcomeCog(commands.Cog):
                     ))
 
                     await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du Hacking Industry Camp !")
-                elif utils_cog.settings.WELCOME_MODE == 'close':
+                    await self.channel_bdd_users_link.send(f"{member.mention},{user['mail']}")
+                elif self.utils_cog.settings.WELCOME_MODE == 'close':
                     await channel.send((
                         f"Bonjour,\n"
                         f"Je ne suis pas en mesure de vous répondre avant le lancement du Hacking Industry Camp :'(\n"
@@ -129,6 +149,17 @@ class WelcomeCog(commands.Cog):
 
         if channel_id == self.channel_bdd_users.id:
             await self.loadUsers()
+        elif channel_id == self.channel_bdd_users_link.id:
+            await self.loadUsersLink()
+
+    @commands.Cog.listener()
+    async def on_raw_message_delete(self, payload):
+        channel_id = payload.channel_id
+
+        if channel_id == self.channel_bdd_users.id:
+            await self.loadUsers()
+        elif channel_id == self.channel_bdd_users_link.id:
+            await self.loadUsersLink()
 
     @commands.command(name='welcome_unknown')
     @commands.check(perms.is_support_user)
@@ -137,9 +168,7 @@ class WelcomeCog(commands.Cog):
         Envoie un message à toutes les personnes qui n'ont pas de grade
         """
 
-        utils_cog = self.bot.get_cog('UtilsCog')
-
-        if utils_cog.settings.WELCOME_MODE == 'close':
+        if self.utils_cog.settings.WELCOME_MODE == 'close':
             await ctx.send(f"Le mode Welcome est fermé !")
             return
 
