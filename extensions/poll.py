@@ -211,6 +211,10 @@ class PollCog(commands.Cog):
         channel = message.channel
         emoji = reaction.emoji
 
+        dm_channel = user.dm_channel
+        if dm_channel is None:
+            dm_channel = await user.create_dm()
+
         for guild in self.bot.guilds:
             if guild.name.startswith('HIC 2021'):
                 self.guild = guild       
@@ -221,7 +225,7 @@ class PollCog(commands.Cog):
         role_names = [r.name for  r in user.roles]
         if utils_cog.settings.PARTICIPANT_ROLE not in role_names:
             await reaction.remove(user)
-            await channel.send(f'<@!{user.id}> n\'a pas le droit de vote')
+            await dm_channel.send(f'<@!{user.id}> n\'a pas le droit de vote')
             return
 
         if channel.id != voting_channel.id:
@@ -261,10 +265,10 @@ class PollCog(commands.Cog):
 
                 if number_of_votes>maxvotes:
                     await reaction.remove(user)
-                    await channel.send(f'<@!{user.id}> ne peut plus voter à "{title}", c\'est son vote n°{number_of_votes}/{maxvotes}')
+                    await dm_channel.send(f'<@!{user.id}> ne peut plus voter à "{title}", c\'est son vote n°{number_of_votes}/{maxvotes}')
                     return
         
-        await channel.send(f'{user.name} a voté {reaction.emoji} à "{title}", c\'est son vote n°{number_of_votes}/{maxvotes}')
+        await dm_channel.send(f'{user.name} a voté {reaction.emoji} à "{title}", c\'est son vote n°{number_of_votes}/{maxvotes}')
 
 def setup(bot):
     bot.add_cog(PollCog(bot))
