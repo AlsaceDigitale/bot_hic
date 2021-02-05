@@ -24,8 +24,8 @@ bot = commands.Bot(command_prefix=BOT_PREFIX,  case_insensitive=True, intents=in
 async def on_ready():
     log.info('We have logged in as {0.user}'.format(bot))
 
-    # stream = discord.Streaming(name='Hacking Industry Camp',url='https://www.twitch.tv/rubius')
-    # await bot.change_presence(activity=stream)
+    stream = discord.Streaming(name='Hacking Industry Camp',url='https://www.twitch.tv/rubius')
+    await bot.change_presence(activity=stream)
     
     await post_version_message()
 
@@ -59,7 +59,8 @@ if __name__ == "__main__":
         'extensions.team',
         'extensions.poll',
         'extensions.utils',
-        'extensions.welcome'
+        'extensions.welcome',
+        'extensions.workadventures',
     ]
 
     for extension in EXTENSIONS:
