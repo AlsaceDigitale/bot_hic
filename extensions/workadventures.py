@@ -46,8 +46,6 @@ class WorkAdventuresCog(commands.Cog):
                         'token': data[1].strip()
                     })
 
-        print(self.users_workadventures)
-
     @commands.Cog.listener()
     async def on_message(self, message):
         channel = message.channel

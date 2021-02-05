@@ -222,15 +222,17 @@ class PollCog(commands.Cog):
 
         number_of_votes = 0
 
+        if channel.id != voting_channel.id:
+            #reacts only on vote channel are processed
+            return
+
         role_names = [r.name for  r in user.roles]
         if utils_cog.settings.PARTICIPANT_ROLE not in role_names:
             await reaction.remove(user)
             await dm_channel.send(f'<@!{user.id}> n\'a pas le droit de vote')
             return
 
-        if channel.id != voting_channel.id:
-            #reacts only on vote channel are processed
-            return
+        
         
         if message.author != self.bot.user:
             #chek whether bot actually posted the reacted message, otherwise ignores

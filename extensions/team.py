@@ -31,11 +31,8 @@ class TeamCog(commands.Cog):
     @commands.command(name='teamadd')
     @commands.check(perms.is_support_user)
     async def teamadd(self, ctx, nom_de_lequipe: discord.Role, members: commands.Greedy[discord.Member]):
-        """"
-        Commande: !teamadd
-        Argument: nom_de_lequipe membre1 [membreX...]
-
-        Rajouter des participants à une équipe.
+        """
+        Rajouter des participants à une équipe. Déjà existante. Si vous voulez créer l'équipe, faites `!teamup`
         """
         
         utils_cog = self.bot.get_cog('UtilsCog')
@@ -62,10 +59,7 @@ class TeamCog(commands.Cog):
     @commands.command(name='teamremove')
     @commands.check(perms.is_support_user)
     async def teamremove(self, ctx, nom_de_lequipe: discord.Role, members: commands.Greedy[discord.Member]):
-        """"
-        Commande: !teamremove
-        Argument: nom_de_lequipe membre1 [membreX...]
-
+        """
         Enlever des participants à une équipe.
         """
         
@@ -93,11 +87,9 @@ class TeamCog(commands.Cog):
     @commands.command(name='teamup')
     @commands.check(perms.is_support_user)
     async def teamup(self, ctx, nom_de_lequipe: str, chef_de_projet: discord.Member, members: commands.Greedy[discord.Member]):
-        """
-        Commande: !teamup
-        Argument: nom_de_lequipe chef_de_projet membre1 membre2 membre3
-
-        Rajouter une equipe avec son salon.
+        f"""
+        Rajouter des participants à une équipe. Le chef de projet est rajouté au rôle `chefdeproj`. L'équipe aura accès à un canal textuel et un canal oral. A noter:
+        tous les noms d'équipes doivent commencer par '{utils_cog.settings.TEAM_PREFIX}'!
         """
         
         utils_cog = self.bot.get_cog('UtilsCog')
@@ -222,10 +214,7 @@ class TeamCog(commands.Cog):
     @commands.command(name='teamcoachadd')
     @commands.check(perms.is_support_or_supercoach_user)
     async def teamcoachadd(self, ctx, nom_de_lequipe: discord.Role, member: discord.Member):
-        """"
-        Commande: !teamcoachadd
-        Argument: nom_de_lequipe membre
-
+        """
         Rajouter un coach à une équipe.
         """
         
@@ -258,10 +247,7 @@ class TeamCog(commands.Cog):
     @commands.command(name='teamcoachremove')
     @commands.check(perms.is_support_or_supercoach_user)
     async def teamcoachremove(self, ctx, nom_de_lequipe: discord.Role, member: discord.Member):
-        """"
-        Commande: !teamcoachremove
-        Argument: nom_de_lequipe membre
-
+        """
         Enlever un coach d'une équipe.
         """
         
