@@ -25,7 +25,7 @@ class HelpCog(commands.Cog):
 
         embed = discord.Embed(title="Aide")
         
-        embed.description = (""
+        embed.description = ""
         embed.description += "==== Hacking Industry Camp - Aide ====\n"
         embed.description += "- `!help` : pour obtenir l'aide des commandes. Certains commandes fonctionnent en parlant directement avec le bot, "
         embed.description += "n'hésitez pas à lui parler directement plutôt qu'encombrer les canaux de discussion.\n"
