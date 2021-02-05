@@ -23,11 +23,9 @@ class HelpCog(commands.Cog):
         
         utils = self.bot.get_cog('UtilsCog')
 
-        embed = discord.Embed(title="Aide")
+        embed = discord.Embed(title="==== Hacking Industry Camp - Aide ====")
         
-        embed.description = ""
-        embed.description += "==== Hacking Industry Camp - Aide ====\n"
-        embed.description += "- `!help` : pour obtenir l'aide des commandes. Certains commandes fonctionnent en parlant directement avec le bot, "
+        embed.description = "- `!help` : pour obtenir l'aide des commandes. Certains commandes fonctionnent en parlant directement avec le bot, "
         embed.description += "n'hésitez pas à lui parler directement plutôt qu'encombrer les canaux de discussion.\n"
         embed.description += "- `@Support` : pour appeler **tous** les bénévole. Autrement faite !support\n"
         embed.description += "- `@coach` : pour appeler **tous** les facilitateurs. Autrement faites !coach\n"
@@ -37,11 +35,11 @@ class HelpCog(commands.Cog):
                               f"Les sondages sont générés par le `@{utils.settings.ADMIN_ROLE}` dans le canal 'PARTICIPANTS'⇒'votes'."
                               " Votez en cliquant sur les emojis qui se trouvent sous chaque sondage. Il y a un nombre max de votes par participant! "
                               "Une fois le sondage terminé, le résultat s'affiche et vous ne pouvez plus voter.\n"
-                              "\n**LIENS**"
-                              "- HIC: https://www.hackingindustry.camp/#/ \n"
-                              "- Le sparkboard: https://hic2021.sparkboard.com/ \n"                             
-                              "- L'agenda: https://www.hackingindustry.camp/Planning-HIC-2021.pdf \n"
-                             "- L'association: http://www.alsacedigitale.org/")
+                              "\n**LIENS**\n"
+                              " - HIC: https://www.hackingindustry.camp/#/ \n"
+                              " - Le sparkboard: https://hic2021.sparkboard.com/ \n"                             
+                              " - L'agenda: https://www.hackingindustry.camp/Planning-HIC-2021.pdf \n"
+                             " - L'association: http://www.alsacedigitale.org/")
                             
 
         await ctx.send(embed=embed)
