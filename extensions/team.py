@@ -89,11 +89,9 @@ class TeamCog(commands.Cog):
     async def teamup(self, ctx, nom_de_lequipe: str, chef_de_projet: discord.Member, members: commands.Greedy[discord.Member]):
         f"""
         Rajouter des participants à une équipe. Le chef de projet est rajouté au rôle `chefdeproj`. L'équipe aura accès à un canal textuel et un canal oral. A noter:
-        tous les noms d'équipes doivent commencer par '{utils_cog.settings.TEAM_PREFIX}'!
+        tous les noms d'équipes doivent commencer par '{self.bot.get_cog('UtilsCog').settings.TEAM_PREFIX}'!
         """
-        
         utils_cog = self.bot.get_cog('UtilsCog')
-        
         
         message = ctx.message
         author = ctx.author
