@@ -11,18 +11,24 @@ class PollCog(commands.Cog):
     REACTIONS_YESNO = ['✅', '❌']
     REACTIONS_MULTI = ['1⃣', '2⃣', '4⃣', '5⃣', '6⃣', '7⃣', '8⃣', '9⃣', '🔵','🔷','💙','#⃣','▶']
     
-    
-
-
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        for guild in self.bot.guilds:
+            if guild.name.startswith('HIC 2021'):
+                self.guild = guild
+
+        self.utils_cog = self.bot.get_cog('UtilsCog')
+
+        self.voting_channel = discord.utils.find(lambda c: c.name == self.utils_cog.settings.CHANNEL_VOTE, guild.channels)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         message = ctx.message
         
         if ctx.command:
-
             if ctx.command.name == 'new_poll':
                 if isinstance(error, commands.BadArgument) or isinstance(error, commands.MissingRequiredArgument):
                     await message.add_reaction('\U0001F44E')
@@ -45,24 +51,15 @@ class PollCog(commands.Cog):
     async def new_poll(self, ctx, question: str,maxvotes: int=1, *options: str):
         """
         (Support uniquement) Faire un nouveau sondage dans le canal réservé. 
-        Afin de terminer le sondage, il vous faudra faire `!closepoll <id>` ou <id> est l'identifiant du sondage 
+        Afin de terminer le sondage, il vous faudra faire `!close_poll <id>` ou <id> est l'identifiant du sondage 
         (indiqué en bas du sondage).
         """
-       
-        
-        utils_cog = self.bot.get_cog('UtilsCog')
 
         message = ctx.message
         author = ctx.author
         role_names = [r.name for  r in author.roles]
- 
-        for guild in self.bot.guilds:
-            if guild.name.startswith('HIC 2021'):
-                self.guild = guild       
-        voting_channel = discord.utils.find(lambda c: c.name == utils_cog.settings.CHANNEL_VOTE, guild.channels)
 
-
-        if utils_cog.settings.ADMIN_ROLE not in role_names:
+        if self.utils_cog.settings.ADMIN_ROLE not in role_names:
             await message.add_reaction('\U0001F44E')
             await ctx.send("seuls les admins peuvent faire cette action!")
             return
@@ -91,7 +88,7 @@ class PollCog(commands.Cog):
             description += '\n {} {}'.format(reactions[x], option)
         
         embed = discord.Embed(title=question, description=''.join(description))
-        react_message = await voting_channel.send(embed=embed)
+        react_message = await self.voting_channel.send(embed=embed)
 
         for reaction in reactions[:len(options)]:
             await react_message.add_reaction(reaction)
@@ -99,7 +96,7 @@ class PollCog(commands.Cog):
         embed.set_footer(text=f'{maxvotes} Poll : ' + str(react_message.id))
 
         await react_message.edit(embed=embed)
-        await ctx.send(f"Le sondage est prêt! Il se trouve sur <#{voting_channel.id}>")
+        await ctx.send(f"Le sondage est prêt! Il se trouve sur <#{self.voting_channel.id}>")
 
     @commands.command(name='reset_poll')
     @commands.check(perms.is_support_user)
@@ -108,18 +105,16 @@ class PollCog(commands.Cog):
         (Support uniquement) Remet tous les compteurs à un pour un sondage avec identifiant `id`. l'`id` d'un vote se trouve sous chaque vote.
         """
         
-        utils_cog = self.bot.get_cog('UtilsCog')
-
         message = ctx.message
         author = ctx.author
         role_names = [r.name for  r in author.roles]
 
-        if utils_cog.settings.PARTICIPANT_ROLE not in role_names:
+        if self.utils_cog.settings.PARTICIPANT_ROLE not in role_names:
             return
 
         print(role_names)
 
-        if utils_cog.settings.ADMIN_ROLE not in role_names:
+        if self.utils_cog.settings.ADMIN_ROLE not in role_names:
             await message.add_reaction('\U0001F44E')
             await ctx.send("seuls les admins peuvent faire cette action!")
             return
@@ -146,15 +141,13 @@ class PollCog(commands.Cog):
         (Support uniquement) détruit un sondage définitivement. Attention! Fonctionne sur tout type de message, ne vous trompez pas dans l'`id`!
         """
         
-        utils_cog = self.bot.get_cog('UtilsCog')
-
         message = ctx.message
         author = ctx.author
         role_names = [r.name for  r in author.roles]
 
         print(role_names)
 
-        if utils_cog.settings.ADMIN_ROLE not in role_names:
+        if self.utils_cog.settings.ADMIN_ROLE not in role_names:
             await message.add_reaction('\U0001F44E')
             await ctx.send("seuls les admins peuvent faire cette action!")
             return
@@ -169,8 +162,6 @@ class PollCog(commands.Cog):
         (Support uniquement) Terminer un sondage identifié par `id`. Le résultat sera inséré sous le sondage, les réactions sont remises à zéro et 
         toutes les réactions sont dorénavants accessibles.
         """
-        
-        utils_cog = self.bot.get_cog('UtilsCog')
 
         message = ctx.message
         author = ctx.author
@@ -178,12 +169,12 @@ class PollCog(commands.Cog):
 
         print(role_names)
 
-        if utils_cog.settings.ADMIN_ROLE not in role_names:
+        if self.utils_cog.settings.ADMIN_ROLE not in role_names:
             await message.add_reaction('\U0001F44E')
             await ctx.send("seuls les admins peuvent faire cette action!")
             return
 
-        called_msg = await ctx.fetch_message(id)
+        called_msg = await self.voting_channel.fetch_message(id)
         
         for e in called_msg.embeds:
             #check if it's a reaction to a vote
@@ -209,7 +200,6 @@ class PollCog(commands.Cog):
         if user.bot:
             return
 
-        utils_cog = self.bot.get_cog('UtilsCog')
         message = reaction.message
         channel = message.channel
         emoji = reaction.emoji
@@ -218,24 +208,17 @@ class PollCog(commands.Cog):
         if dm_channel is None:
             dm_channel = await user.create_dm()
 
-        for guild in self.bot.guilds:
-            if guild.name.startswith('HIC 2021'):
-                self.guild = guild       
-        voting_channel = discord.utils.find(lambda c: c.name == utils_cog.settings.CHANNEL_VOTE, guild.channels)
-
         number_of_votes = 0
 
-        if channel.id != voting_channel.id:
+        if channel.id != self.voting_channel.id:
             #reacts only on vote channel are processed
             return
 
         role_names = [r.name for  r in user.roles]
-        if utils_cog.settings.PARTICIPANT_ROLE not in role_names:
+        if self.utils_cog.settings.PARTICIPANT_ROLE not in role_names:
             await reaction.remove(user)
             await dm_channel.send(f'<@!{user.id}> n\'a pas le droit de vote')
             return
-
-        
         
         if message.author != self.bot.user:
             #chek whether bot actually posted the reacted message, otherwise ignores
