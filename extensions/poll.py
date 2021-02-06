@@ -206,6 +206,9 @@ class PollCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
+        if member.bot:
+            return
+
         utils_cog = self.bot.get_cog('UtilsCog')
         message = reaction.message
         channel = message.channel
