@@ -146,8 +146,7 @@ class AutoMessageCog(commands.Cog):
                 await salon.send(embed=embed)
 
             await self.channel_msg_auto.get_partial_message(message['id']).add_reaction('👍')
-            print(index)
-            print(self.messages.pop(index))
+            del self.messages[index]
 
         print(self.messages)
 
