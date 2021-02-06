@@ -24,7 +24,7 @@ bot = commands.Bot(command_prefix=BOT_PREFIX,  case_insensitive=True, intents=in
 async def on_ready():
     log.info('We have logged in as {0.user}'.format(bot))
 
-    stream = discord.Streaming(name='Hacking Industry Camp',url='https://www.twitch.tv/rubius')
+    stream = discord.Streaming(name='Hacking Industry Camp',url='https://www.twitch.tv/alsacedigitale')
     await bot.change_presence(activity=stream)
     
     await post_version_message()
