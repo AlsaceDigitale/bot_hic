@@ -21,6 +21,7 @@ class AutoMessageCog(commands.Cog):
         self.channel_msg_auto = discord.utils.find(lambda c: c.name == 'msg_auto', guild.channels)
         
         await self.loadMessagesAuto()
+        self.send_msg_auto.start()
 
     def stripList(self, l):       
         return list(map(lambda s : s.strip(), l))
@@ -111,11 +112,6 @@ class AutoMessageCog(commands.Cog):
                 continue
 
             self.messages.append(obj)
-        
-        if not self.send_msg_auto.is_running() and len(self.messages) > 0:
-            self.send_msg_auto.start()
-        elif self.send_msg_auto.is_running():
-            self.send_msg_auto.stop()
     
     @tasks.loop(seconds=30.0)
     async def send_msg_auto(self):
