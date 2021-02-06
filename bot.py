@@ -61,6 +61,7 @@ if __name__ == "__main__":
         'extensions.utils',
         'extensions.welcome',
         'extensions.workadventures',
+        'extensions.auto_message'
     ]
 
     for extension in EXTENSIONS:
