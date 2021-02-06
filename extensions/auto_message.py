@@ -120,6 +120,7 @@ class AutoMessageCog(commands.Cog):
     @tasks.loop(seconds=30.0)
     async def send_msg_auto(self):
         now = datetime.now().replace(second=0)
+        print(now)
 
         print(self.messages)
 
