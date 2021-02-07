@@ -63,7 +63,7 @@ class VideoCog(commands.Cog):
         try:
             with urllib.request.urlopen(url) as response:
                 if response.reason == 'OK':
-                    await ctx.send("OK ✅, j'arrive bien à accéder à la URL !")
+                    await ctx.send("OK ✅, j'arrive bien à accéder au lien !")
                 else:
                     await ctx.send(f"⚠️ ATTENTION ⚠️ : j'ai essayé d'accèder au lien et ça ne marche pas (Erreur {response.reason}), c'est peut-être pas grave mais on ne sait jamais, vérifiez ! {ctx.author.mention}")
         except urllib.request.URLError:
