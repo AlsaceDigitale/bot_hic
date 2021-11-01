@@ -22,7 +22,7 @@ class AdminCog(commands.Cog):
         author = ctx.message.author
         role_names = [r.name for  r in author.roles]
 
-        if '@admin' in role_names:
+        if self.utils_cog.settings.ADMIN_ROLE not in role_names:
             await ctx.message.add_reaction('\U0001F9BE')
         else:
             await ctx.message.add_reaction('\U0001F44E')

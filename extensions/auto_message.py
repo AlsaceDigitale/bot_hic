@@ -15,7 +15,7 @@ class AutoMessageCog(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         for guild in self.bot.guilds:
-            if guild.name.startswith('HIC 2021'):
+            if guild.name.startswith('Hacking Industry Camp'):
                 self.guild = guild
 
         self.channel_msg_auto = discord.utils.find(lambda c: c.name == 'msg_auto', guild.channels)
@@ -23,7 +23,7 @@ class AutoMessageCog(commands.Cog):
         await self.loadMessagesAuto()
         self.send_msg_auto.start()
 
-    def stripList(self, l):       
+    def stripList(self, l):
         return list(map(lambda s : s.strip(), l))
     
     def checkNumber(self, text):

@@ -13,7 +13,7 @@ class VideoCog(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         for guild in self.bot.guilds:
-            if guild.name.startswith('HIC 2021'):
+            if guild.name.startswith('Hacking Industry Camp'):
                 self.guild = guild
 
         self.channel_videos = discord.utils.find(lambda c: c.name == 'videos', guild.channels)

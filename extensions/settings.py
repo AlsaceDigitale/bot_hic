@@ -13,6 +13,7 @@ class Settings:
         self.CHANNEL_SUPPORT=os.getenv('BOT_CHANNEL_SUPPORT', 'support-technique')
         self.CHANNEL_VOTE=os.getenv('BOT_CHANNEL_VOTE', 'votes')
         self.PARTICIPANT_ROLE=os.getenv('BOT_PARTICIPANT_ROLE', 'Participant')
+        self.JURY_ROLE=os.getenv('BOT_JURY_ROLE', 'Jury')
         
     def as_string(self):
         ret=""

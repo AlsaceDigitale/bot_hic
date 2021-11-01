@@ -17,7 +17,7 @@ class PollCog(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         for guild in self.bot.guilds:
-            if guild.name.startswith('HIC 2021'):
+            if guild.name.startswith('Hacking Industry Camp'):
                 self.guild = guild
 
         self.utils_cog = self.bot.get_cog('UtilsCog')
