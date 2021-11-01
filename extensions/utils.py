@@ -1,6 +1,8 @@
 import discord
+from discord.enums import ChannelType
 from discord.ext import commands
 import structlog 
+from datetime import datetime
 
 import os
 
@@ -51,8 +53,21 @@ class UtilsCog(commands.Cog):
         await self.bot_log_message("-------")
         await self.bot_log_message(self.settings.as_string())
 
+    @commands.command(name='purge')
+    @commands.check(perms.is_support_user)
+    async def purge(self, ctx):
+        if ctx.channel.type != ChannelType.text:
+            return
 
+        date = datetime.now()
+        args = ctx.message.content.split(' ')
+
+        if len(args) >= 1:
+            date = datetime.strptime(args[0], '%d/%m/%Y')
         
+        async for message in ctx.history(limit=None):
+            if message.created_at <= date:
+                await message.delete()
 
 def setup(bot):
     bot.add_cog(UtilsCog(bot))
