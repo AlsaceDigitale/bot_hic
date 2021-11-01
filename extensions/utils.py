@@ -1,4 +1,5 @@
 import discord
+from discord import errors
 from discord.enums import ChannelType
 from discord.ext import commands
 import structlog 
@@ -36,6 +37,10 @@ class UtilsCog(commands.Cog):
         s=f"Exception: {args} {kwargs}\n"
         s+=traceback.format_stack()
         await self.bot_log_message(s)
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        print(error)
         
     @commands.command(name='crash_log')
     @commands.check(perms.is_support_user)
@@ -59,14 +64,14 @@ class UtilsCog(commands.Cog):
         if ctx.channel.type != ChannelType.text:
             return
 
-        date = datetime.now()
+        date = datetime.now().date()
         args = ctx.message.content.split(' ')
 
-        if len(args) >= 1:
-            date = datetime.strptime(args[0], '%d/%m/%Y')
-        
+        if len(args) >= 2:
+            date = datetime.strptime(args[1], '%d/%m/%Y').date()
+
         async for message in ctx.history(limit=None):
-            if message.created_at <= date:
+            if message.created_at.date() <= date:
                 await message.delete()
 
 def setup(bot):
