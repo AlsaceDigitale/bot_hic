@@ -93,7 +93,7 @@ class WorkAdventuresCog(commands.Cog):
                 await self.channel_help.send(f"Je n'ai pas connaissance du lien pour Work Adventure de {member.mention} !")
                 continue
 
-            await dm_channel.send(f"Voici votre lien pour joindre Work Adventure du HIC : https://play.workadventu.re/register/{user_workadventures['token']}")
+            await dm_channel.send(f"Voici votre lien pour joindre Work Adventure du HIC : {user_workadventures['token']}")
 
 def setup(bot):
     bot.add_cog(WorkAdventuresCog(bot))
