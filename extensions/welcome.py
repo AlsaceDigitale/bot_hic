@@ -1,4 +1,5 @@
 import discord
+from discord.errors import Forbidden
 import requests
 from discord.ext import tasks, commands
 
@@ -62,8 +63,13 @@ class WelcomeCog(commands.Cog):
 
             if role not in member.roles:
                 await member.add_roles(role)
-                await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
                 await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du Hacking Industry Camp !")
+                
+                try:
+                    await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
+                except Forbidden:
+                    pass
+
 
     @commands.command(name='checkAttendees')
     async def checkAttendeesCommand(self, ctx): 
@@ -79,7 +85,10 @@ class WelcomeCog(commands.Cog):
             if found_attendee is None:
                 continue
             
-            await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
+            try:
+                await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
+            except Forbidden:
+                pass
 
 def setup(bot):
     bot.add_cog(WelcomeCog(bot))
