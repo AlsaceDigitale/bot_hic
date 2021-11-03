@@ -14,6 +14,7 @@ class Settings:
         self.CHANNEL_VOTE=os.getenv('BOT_CHANNEL_VOTE', 'votes')
         self.PARTICIPANT_ROLE=os.getenv('BOT_PARTICIPANT_ROLE', 'Participant')
         self.JURY_ROLE=os.getenv('BOT_JURY_ROLE', 'Jury')
+        self.URL_API_ATTENDEES=os.getenv('BOT_URL_API_ATTENDEES', 'https://hic-manager-dev.osc-fr1.scalingo.io/api/attendees/')
         
     def as_string(self):
         ret=""
