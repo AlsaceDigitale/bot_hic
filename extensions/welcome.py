@@ -69,5 +69,17 @@ class WelcomeCog(commands.Cog):
     async def checkAttendeesCommand(self, ctx): 
         await self.checkAttendees()
 
+    @commands.command(name='changeNicks')
+    async def changeNicks(self, ctx):
+        attendees = requests.get(self.utils_cog.settings.URL_API_ATTENDEES).json()
+
+        async for member in self.guild.fetch_members(limit=None):
+            found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id), None)
+
+            if found_attendee is None:
+                continue
+            
+            await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
+
 def setup(bot):
     bot.add_cog(WelcomeCog(bot))
