@@ -59,7 +59,7 @@ if __name__ == "__main__":
         'extensions.team',
         'extensions.poll',
         'extensions.utils',
-        # 'extensions.welcome',
+        'extensions.welcome',
         # 'extensions.workadventures',
         'extensions.auto_message',
         # 'extensions.video'

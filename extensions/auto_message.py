@@ -116,9 +116,9 @@ class AutoMessageCog(commands.Cog):
     @tasks.loop(seconds=30.0)
     async def send_msg_auto(self):
         now = datetime.now().replace(second=0)
-        print(now)
+        # print(now)
 
-        print(self.messages)
+        # print(self.messages)
 
         for index in range(len(self.messages)):
             message = self.messages[index]
@@ -145,7 +145,7 @@ class AutoMessageCog(commands.Cog):
             await self.channel_msg_auto.get_partial_message(message['id']).add_reaction('👍')
             del self.messages[index]
 
-        print(self.messages)
+        # print(self.messages)
 
     @commands.Cog.listener()
     async def on_message(self, message):
