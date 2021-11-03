@@ -61,7 +61,7 @@ class UtilsCog(commands.Cog):
     @commands.command(name='purge')
     @commands.check(perms.is_support_user)
     async def purge(self, ctx):
-        if ctx.channel.type != ChannelType.text:
+        if ctx.channel.type != ChannelType.text and ctx.channel.type != ChannelType.news:
             return
 
         date = datetime.now().date()
