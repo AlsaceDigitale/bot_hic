@@ -26,7 +26,7 @@ class WelcomeCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        attendees = requests.get(self.utils_cog.settings.URL_API_ATTENDEES).json()
+        attendees = requests.get(f"{self.utils_cog.settings.URL_API}/api/attendees/").json()
 
         found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id), None)
 
@@ -48,7 +48,7 @@ class WelcomeCog(commands.Cog):
         await self.checkAttendees()
 
     async def checkAttendees(self):
-        attendees = requests.get(self.utils_cog.settings.URL_API_ATTENDEES).json()
+        attendees = requests.get(f"{self.utils_cog.settings.URL_API}/api/attendees/").json()
 
         async for member in self.guild.fetch_members(limit=None):
             found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id), None)

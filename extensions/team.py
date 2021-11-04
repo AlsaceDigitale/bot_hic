@@ -1,4 +1,5 @@
 import discord
+import requests
 from discord.ext import commands
 from . import perms
 
@@ -6,8 +7,26 @@ class TeamCog(commands.Cog):
     """
     Equipes
     """
+
+    guild = None
+    utils_cog = None
+
+    role_chef = None
+    category_particpants = None
+
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        for guild in self.bot.guilds:
+            if guild.name.startswith('Hacking Industry Camp'):
+                self.guild = guild
+
+        self.utils_cog = self.bot.get_cog('UtilsCog')
+
+        self.role_chef = discord.utils.find(lambda c: c.name == 'Chef de Projet', guild.roles)
+        self.category_particpants = discord.utils.find(lambda c: c.name == 'Participants', guild.categories)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -275,7 +294,58 @@ class TeamCog(commands.Cog):
         await member.remove_roles(nom_de_lequipe)
         await ctx.message.add_reaction('\U0001F9BE')
         
-        
+    @commands.command(name='teamapi')
+    async def teamapi(self, ctx):
+        project_teams = requests.get(f"{self.utils_cog.settings.URL_API}/api/project-teams/").json()
+
+        for project_team in project_teams:
+            if project_team['event'] != "hic-2021":
+                continue
+
+            name_team = f"{self.utils_cog.settings.TEAM_PREFIX}{project_team['number']}"
+
+            role_team = discord.utils.find(lambda r: r.name == name_team, self.guild.roles)
+
+            if role_team is None:
+                role_team = await ctx.guild.create_role(name=name_team, mentionable=True)
+
+            text_channel_team = discord.utils.find(lambda r: r.name.lower() == name_team.lower(), self.category_particpants.text_channels)
+
+            if text_channel_team is None:
+                text_channel_team = await self.category_particpants.create_text_channel(name_team)
+
+                perms = text_channel_team.overwrites_for(role_team)
+                perms.send_messages=True
+
+                await text_channel_team.set_permissions(role_team, overwrite=perms)
+
+            voice_channel_team = discord.utils.find(lambda r: r.name.lower() == name_team.lower(), self.category_particpants.voice_channels)
+
+            if voice_channel_team is None:
+                voice_channel_team = await self.category_particpants.create_voice_channel(name_team.lower())
+
+                perms = voice_channel_team.overwrites_for(role_team)
+                perms.view_channel=True
+
+                await voice_channel_team.set_permissions(role_team, overwrite=perms)
+
+            leader_team = discord.utils.find(lambda r: r.id == project_team['leader']['discord_unique_id'], self.guild.members)
+
+            if leader_team is not None:
+                leader_team_roles = [r.name for r in leader_team.roles]
+
+                if name_team not in leader_team_roles:
+                    await leader_team.add_roles(role_team)
+                    await leader_team.add_roles(self.role_chef)
+                    
+            for member_team_data in project_team['members']:
+                member_team = discord.utils.find(lambda r: r.id == member_team_data['discord_unique_id'], self.guild.members)
+
+                if member_team is not None:
+                    member_team_roles = [r.name for r in member_team.roles]
+
+                    if name_team not in member_team_roles:
+                        await member_team.add_roles(role_team)
 
 def setup(bot):
     bot.add_cog(TeamCog(bot))
