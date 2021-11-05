@@ -9,7 +9,7 @@ class PollCog(commands.Cog):
     Sondages
     """
     REACTIONS_YESNO = ['✅', '❌']
-    REACTIONS_MULTI = ['1⃣', '2⃣', '4⃣', '5⃣', '6⃣', '7⃣', '8⃣', '9⃣', '🔵','🔷','💙','#⃣','▶']
+    REACTIONS_MULTI = ['🅰', '🅱', '🅲', '🅳', '🅴', '🅵', '🅶', '🅷', '🅸', '🅹', '🅺', '🅻', '🅼', '🅽', '🅾', '🅿︎', '🆀', '🆁', '🆂', '🆃', '🆄', '🆅', '🆆', '🆇', '🆈', '🆉']
     
     def __init__(self, bot):
         self.bot = bot
