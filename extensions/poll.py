@@ -66,7 +66,7 @@ class PollCog(commands.Cog):
         if len(options) <= 1:
             await ctx.send('Il vous faut au minimum une option')
             return
-        if len(options) > 15:
+        if len(options) > len(self.REACTIONS_MULTI):
             await ctx.send("Trop d'options")
             return
         
