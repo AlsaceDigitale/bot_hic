@@ -315,7 +315,7 @@ class TeamCog(commands.Cog):
                 text_channel_team = await self.category_particpants.create_text_channel(name_team)
 
                 perms = text_channel_team.overwrites_for(role_team)
-                perms.send_messages=True
+                perms.view_channel=True
 
                 await text_channel_team.set_permissions(role_team, overwrite=perms)
 
