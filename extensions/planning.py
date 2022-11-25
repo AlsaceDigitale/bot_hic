@@ -9,7 +9,7 @@ class PlanningCog(commands.Cog):
     """
     Planning
     """
-    PLANNING_URL = 'https://www.hackingindustry.camp/Planning-HIC-2021.pdf'
+    PLANNING_URL = 'https://www.hackingindustry.camp/HIC2022-Planning-Previsionnel.pdf'
 
     def __init__(self, bot):
         self.bot = bot
@@ -38,15 +38,14 @@ class PlanningCog(commands.Cog):
 
         fields = [
             'planning',
-            'vendredi 5 février 2021',
-            'samedi 6 février 2021',
-            'dimanche 7 février 2021',
-            'du lundi 8 février au vendredi 12 février 2021'
+            'vendredi 25 novembre 2022',
+            'samedi 26 novembre 2022',
+            'dimanche 27 novembre 2022'
         ]
         
         idxs = []
         idx_ends = []
-        opt_list = {'vendredi': 1, 'samedi': 2, 'dimanche': 3,'semaine': 4}
+        opt_list = {'vendredi': 1, 'samedi': 2, 'dimanche': 3}
         
         for f in fields:
             try:
