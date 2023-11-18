@@ -18,7 +18,7 @@ class AutoMessageCog(commands.Cog):
             if guild.name.startswith('Hacking Industry Camp'):
                 self.guild = guild
 
-        self.channel_msg_auto = discord.utils.find(lambda c: c.name == 'msg_auto', guild.channels)
+        self.channel_msg_auto = await discord.utils.find(lambda c: c.name == 'msg_auto', self.guild.channels)
         
         await self.loadMessagesAuto()
         self.send_msg_auto.start()
@@ -156,17 +156,19 @@ class AutoMessageCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload):
-        channel_id = payload.channel_id
+        if self.channel_msg_auto:
+            channel_id = payload.channel_id
 
-        if channel_id == self.channel_msg_auto.id:
-            await self.loadMessagesAuto()
+            if channel_id == self.channel_msg_auto.id:
+                await self.loadMessagesAuto()
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload):
-        channel_id = payload.channel_id
+        if self.channel_msg_auto:
+            channel_id = payload.channel_id
 
-        if channel_id == self.channel_msg_auto.id:
-            await self.loadMessagesAuto()
+            if channel_id == self.channel_msg_auto.id:
+                await self.loadMessagesAuto()
 
-def setup(bot):
-    bot.add_cog(AutoMessageCog(bot))
+async def setup(bot):
+    await bot.add_cog(AutoMessageCog(bot))

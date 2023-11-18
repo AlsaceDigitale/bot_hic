@@ -347,5 +347,5 @@ class TeamCog(commands.Cog):
                     if name_team not in member_team_roles:
                         await member_team.add_roles(role_team)
 
-def setup(bot):
-    bot.add_cog(TeamCog(bot))
+async def setup(bot):
+    await bot.add_cog(TeamCog(bot))

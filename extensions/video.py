@@ -74,5 +74,5 @@ class VideoCog(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Utilisation: !video <url> [message]')
 
-def setup(bot):
-    bot.add_cog(VideoCog(bot))
+async def setup(bot):
+    await bot.add_cog(VideoCog(bot))

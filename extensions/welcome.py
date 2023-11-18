@@ -90,5 +90,5 @@ class WelcomeCog(commands.Cog):
             except Forbidden:
                 pass
 
-def setup(bot):
-    bot.add_cog(WelcomeCog(bot))
+async def setup(bot):
+    await bot.add_cog(WelcomeCog(bot))
