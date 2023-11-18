@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 from discord import errors
 from discord.enums import ChannelType
@@ -73,6 +75,7 @@ class UtilsCog(commands.Cog):
         async for message in ctx.history(limit=None):
             if message.created_at.date() <= date:
                 await message.delete()
+                await asyncio.sleep(0.1)    # rate limiting
 
 def setup(bot):
     bot.add_cog(UtilsCog(bot))
