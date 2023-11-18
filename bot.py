@@ -24,6 +24,21 @@ bot = commands.Bot(command_prefix=BOT_PREFIX,  case_insensitive=True, intents=in
 async def on_ready():
     log.info('We have logged in as {0.user}'.format(bot))
 
+    EXTENSIONS = [
+        'extensions.help',
+        'extensions.admin',
+        'extensions.team',
+        'extensions.poll',
+        'extensions.utils',
+        'extensions.welcome',
+        'extensions.auto_message'
+    ]
+
+    for extension in EXTENSIONS:
+        log.info('loading extension', name=extension)
+        await bot.load_extension(extension)
+
+
     # stream = discord.Streaming(name='Hacking Industry Camp',url='https://www.twitch.tv/alsacedigitale')
     # await bot.change_presence(activity=stream)
     
@@ -52,20 +67,5 @@ async def bot_log_message(*args, **kwargs):
         log.error('Could not post message to bot log channel', exc_info=e)
 
 if __name__ == "__main__":
-    EXTENSIONS = [
-        'extensions.help',
-        # 'extensions.planning',
-        'extensions.admin',
-        'extensions.team',
-        'extensions.poll',
-        'extensions.utils',
-        'extensions.welcome',
-        # 'extensions.workadventures',
-        'extensions.auto_message',
-        # 'extensions.video'
-    ]
 
-    for extension in EXTENSIONS:
-        bot.load_extension(extension)
-
-    bot.run(TOKEN, bot=True, reconnect=True)
+    bot.run(TOKEN, reconnect=True, root_logger=structlog.get_logger())

@@ -95,5 +95,5 @@ class WorkAdventuresCog(commands.Cog):
 
             await dm_channel.send(f"Voici votre lien pour joindre Work Adventure du HIC : {user_workadventures['token']}")
 
-def setup(bot):
-    bot.add_cog(WorkAdventuresCog(bot))
+async def setup(bot):
+    await bot.add_cog(WorkAdventuresCog(bot))

@@ -77,5 +77,5 @@ class UtilsCog(commands.Cog):
                 await message.delete()
                 await asyncio.sleep(0.1)    # rate limiting
 
-def setup(bot):
-    bot.add_cog(UtilsCog(bot))
+async def setup(bot):
+    await bot.add_cog(UtilsCog(bot))
