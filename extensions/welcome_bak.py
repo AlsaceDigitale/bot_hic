@@ -20,16 +20,13 @@ class WelcomeCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        for guild in self.bot.guilds:
-            if guild.name.startswith('Hacking Industry Camp'):
-                self.guild = guild
-
         self.utils_cog = self.bot.get_cog('UtilsCog')
+        self.guild = self.utils_cog.settings.guild
 
-        self.channel_welcome = discord.utils.find(lambda c: c.name == 'bienvenue', guild.channels)
-        self.channel_help = discord.utils.find(lambda c: c.name == 'demandes-aide', guild.channels)
-        self.channel_bdd_users = discord.utils.find(lambda c: c.name == 'users', guild.channels)
-        self.channel_bdd_users_link = discord.utils.find(lambda c: c.name == 'users_link', guild.channels)
+        self.channel_welcome = discord.utils.find(lambda c: c.name == 'bienvenue', self.guild.channels)
+        self.channel_help = discord.utils.find(lambda c: c.name == 'demandes-aide', self.guild.channels)
+        self.channel_bdd_users = discord.utils.find(lambda c: c.name == 'users', self.guild.channels)
+        self.channel_bdd_users_link = discord.utils.find(lambda c: c.name == 'users_link', self.guild.channels)
 
         await self.loadUsers()
         await self.loadUsersLink()
@@ -82,8 +79,8 @@ class WelcomeCog(commands.Cog):
         elif self.utils_cog.settings.WELCOME_MODE == 'close':
             msg = (
                 f"Bonjour {member.mention} vous débarquez ici, on dirait !\n"
-                f"Je suis {self.bot.user.mention}, je suis le gentil robot du Hacking Industry Camp\n\n"
-                f"L'évenement n'a pas encore débuté ! Je reviendrai vers vous lors du lancement du HIC."
+                f"Je suis {self.bot.user.mention}, je suis le gentil robot du {self.utils_cog.EVENT_NAME}\n\n"
+                f"L'évenement n'a pas encore débuté ! Je reviendrai vers vous lors du lancement du {self.utils_cog.EVENT_NAME}."
             )
         
             await dm_channel.send(msg)
@@ -101,7 +98,7 @@ class WelcomeCog(commands.Cog):
             member = self.guild.get_member(author.id)
 
             if member is None:
-                await channel.send("Vous n'êtez pas présent sur le serveur « Hacking Industry Camp » !")
+                await channel.send(f"Vous n'êtes pas présent sur le serveur « {self.utils_cog.SERVER_NAME} » !")
                 return
 
             if len(member.roles) <= 1:
@@ -134,12 +131,12 @@ class WelcomeCog(commands.Cog):
                         f"Vous pouvez me demander de l’aide à tout moment en tapant !aide"
                     ))
 
-                    await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du Hacking Industry Camp !")
+                    await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du {self.utils_cog.EVENT_NAME} !")
                     await self.channel_bdd_users_link.send(f"{member.mention},{user['mail']}")
                 elif self.utils_cog.settings.WELCOME_MODE == 'close':
                     await channel.send((
                         f"Bonjour,\n"
-                        f"Je ne suis pas en mesure de vous répondre avant le lancement du Hacking Industry Camp :'(\n"
+                        f"Je ne suis pas en mesure de vous répondre avant le lancement du {self.utils_cog.EVENT_NAME} :'(\n"
                         f"Je reviendrai vers vous lors du lancement !"
                     ))
     

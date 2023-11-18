@@ -25,11 +25,11 @@ async def on_ready():
     log.info('We have logged in as {0.user}'.format(bot))
 
     EXTENSIONS = [
+        'extensions.utils',
         'extensions.help',
         'extensions.admin',
         'extensions.team',
         'extensions.poll',
-        'extensions.utils',
         'extensions.welcome',
         'extensions.auto_message'
     ]

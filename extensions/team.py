@@ -19,11 +19,8 @@ class TeamCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        for guild in self.bot.guilds:
-            if guild.name.startswith('Hacking Industry Camp'):
-                self.guild = guild
-
         self.utils_cog = self.bot.get_cog('UtilsCog')
+        self.guild = self.utils_cog.settings.guild
 
         self.role_chef = discord.utils.find(lambda c: c.name == 'Chef de Projet', guild.roles)
         self.category_particpants = discord.utils.find(lambda c: c.name == 'Participants', guild.categories)

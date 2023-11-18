@@ -7,14 +7,14 @@ class HelpCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        utils_cog = self.bot.get_cog('UtilsCog')
+        self.utils_cog = self.bot.get_cog('UtilsCog')
 
         for guild in self.bot.guilds:
-            if guild.name.startswith('Hacking Industry Camp'):
+            if guild.name.startswith(self.utils_cog.SERVER_NAME):
                 self.guild = guild
 
-        self.channel_help = discord.utils.find(lambda c: c.name == utils_cog.settings.CHANNEL_HELP, guild.channels)
-        self.channel_support = discord.utils.find(lambda c: c.name == utils_cog.settings.CHANNEL_SUPPORT, guild.channels)
+        self.channel_help = discord.utils.find(lambda c: c.name == self.utils_cog.settings.CHANNEL_HELP, self.guild.channels)
+        self.channel_support = discord.utils.find(lambda c: c.name == self.utils_cog.settings.CHANNEL_SUPPORT, self.guild.channels)
 
 
     @commands.command(name='aide')
@@ -25,7 +25,7 @@ class HelpCog(commands.Cog):
         
         utils = self.bot.get_cog('UtilsCog')
 
-        embed = discord.Embed(title="==== Hacking Industry Camp - Aide ====")
+        embed = discord.Embed(title=f"==== {utils.settings.EVENT_NAME} - Aide ====")
         
         embed.description = "- `!help` : pour obtenir l'aide des commandes. Certains commandes fonctionnent en parlant directement avec le bot, "
         embed.description += "n'hésitez pas à lui parler directement plutôt qu'encombrer les canaux de discussion.\n"

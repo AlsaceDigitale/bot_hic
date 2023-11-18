@@ -14,11 +14,8 @@ class WelcomeCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        for guild in self.bot.guilds:
-            if guild.name.startswith('Hacking Industry Camp'):
-                self.guild = guild
-
         self.utils_cog = self.bot.get_cog('UtilsCog')
+        self.guild = self.utils_cog.settings.guild
 
         self.channel_welcome = discord.utils.find(lambda c: c.name == 'bienvenue', guild.channels)
 
@@ -41,7 +38,7 @@ class WelcomeCog(commands.Cog):
         if role not in member.roles:
             await member.add_roles(role)
             await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
-            await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du Hacking Industry Camp !")
+            await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du {self.utils_cog.EVENT_NAME} !")
 
     @tasks.loop(minutes=5.0)
     async def checkAttendeesTask(self):
@@ -63,7 +60,7 @@ class WelcomeCog(commands.Cog):
 
             if role not in member.roles:
                 await member.add_roles(role)
-                await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du Hacking Industry Camp !")
+                await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du {self.utils_cog.EVENT_NAME} !")
                 
                 try:
                     await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")

@@ -18,7 +18,7 @@ log = structlog.get_logger()
 class UtilsCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.settings = settings.Settings()
+        self.settings = settings.Settings(self.bot)
 
     async def bot_log_message(self, *args, **kwargs):
         BOT_LOG_CHANNEL_ID = os.getenv('BOT_LOG_CHANNEL_ID')
@@ -43,6 +43,10 @@ class UtilsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         print(error)
+
+    @commands.Cog.listener()
+    async def on_ready(self, ctx):
+        await self.settings.on_ready()
         
     @commands.command(name='crash_log')
     @commands.check(perms.is_support_user)
@@ -55,10 +59,10 @@ class UtilsCog(commands.Cog):
             
     @commands.command(name='show_settings')
     @commands.check(perms.is_support_user)
-    async def crash_log(self, ctx):
-        await self.bot_log_message("Settings")
-        await self.bot_log_message("-------")
-        await self.bot_log_message(self.settings.as_string())
+    async def show_settings(self, ctx):
+        await ctx.reply("Settings")
+        await ctx.reply("-------")
+        await ctx.reply(self.settings.as_string())
 
     @commands.command(name='purge')
     @commands.check(perms.is_support_user)
