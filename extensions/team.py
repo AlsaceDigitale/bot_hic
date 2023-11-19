@@ -99,10 +99,30 @@ class TeamCog(BaseCog):
             await member.remove_roles(nom_de_lequipe)
             await ctx.message.add_reaction(reactions.SUCCESS)
 
+    @commands.command(name='teamlist')
+    @commands.check(perms.is_support_user)
+    async def teamlist(self, ctx):
+        """Liste des équipes"""
+
+        message = ctx.message
+        author = ctx.author
+        server: discord.Guild = ctx.guild
+
+        role_names = [r.name for r in author.roles]
+
+        if self.settings.ADMIN_ROLE not in role_names:
+            await message.add_reaction(reactions.FAILURE)
+            await ctx.send(f"seuls les admins ({self.settings.ADMIN_ROLE}) peuvent faire cette action!")
+            return
+
+        roles = filter(lambda r: r.name.startswith(self.settings.TEAM_PREFIX), self.guild.roles)
+
+        await ctx.send('\n'.join(sorted([r.name for r in roles])))
+
     @commands.command(name='teamdown')
     @commands.check(perms.is_support_user)
     async def teamdown(self, ctx, nom_de_lequipe: str):
-        """"Supprimer une équipe"""
+        """Supprimer une équipe"""
 
         role = nom_de_lequipe
 
