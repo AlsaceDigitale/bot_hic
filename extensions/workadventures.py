@@ -30,7 +30,7 @@ class WorkAdventuresCog(BaseCog):
         self.channel_bdd_workadventures = discord.utils.find(lambda c: c.name == 'workadventures', self.guild.channels)
 
         await self.loadUsersWorkAdventures()
-    
+
     async def loadUsersWorkAdventures(self):
         self.users_workadventures = []
 
@@ -52,7 +52,7 @@ class WorkAdventuresCog(BaseCog):
 
         if channel == self.channel_bdd_workadventures:
             await self.loadUsersWorkAdventures()
-    
+
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload):
         channel_id = payload.channel_id
@@ -79,21 +79,29 @@ class WorkAdventuresCog(BaseCog):
             if dm_channel is None:
                 dm_channel = await member.create_dm()
 
-            user_link = next((user_link for user_link in self.welcome_cog.users_link if user_link["discord_id"] == member.id), None)
+            user_link = next(
+                (user_link for user_link in self.welcome_cog.users_link if user_link["discord_id"] == member.id), None)
 
             if user_link is None:
-                await dm_channel.send(f"Oups ! J'ai oublié ton adresse e-mail. J’ai envoyé un message aux organisateurs pour qu’ils viennent vous aider !")
-                await self.channel_help.send(f"Je ne connais pas l'adresse e-mail pour Work Adventure de {member.mention} !")
+                await dm_channel.send(
+                    f"Oups ! J'ai oublié ton adresse e-mail. J’ai envoyé un message aux organisateurs pour qu’ils viennent vous aider !")
+                await self.channel_help.send(
+                    f"Je ne connais pas l'adresse e-mail pour Work Adventure de {member.mention} !")
                 continue
 
-            user_workadventures = next((user_workadventures for user_workadventures in self.users_workadventures if user_workadventures['mail'] == user_link['mail']), None)
-            
+            user_workadventures = next((user_workadventures for user_workadventures in self.users_workadventures if
+                                        user_workadventures['mail'] == user_link['mail']), None)
+
             if user_workadventures is None:
-                await dm_channel.send(f"Ahh, je connais pas ton lien pour Work Adventure. J’ai envoyé un message aux organisateurs pour qu’ils viennent vous aider !")
-                await self.channel_help.send(f"Je n'ai pas connaissance du lien pour Work Adventure de {member.mention} !")
+                await dm_channel.send(
+                    f"Ahh, je connais pas ton lien pour Work Adventure. J’ai envoyé un message aux organisateurs pour qu’ils viennent vous aider !")
+                await self.channel_help.send(
+                    f"Je n'ai pas connaissance du lien pour Work Adventure de {member.mention} !")
                 continue
 
-            await dm_channel.send(f"Voici votre lien pour joindre Work Adventure du HIC : {user_workadventures['token']}")
+            await dm_channel.send(
+                f"Voici votre lien pour joindre Work Adventure du HIC : {user_workadventures['token']}")
+
 
 async def setup(bot):
     await bot.add_cog(WorkAdventuresCog(bot))

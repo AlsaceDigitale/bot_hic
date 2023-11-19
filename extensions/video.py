@@ -19,7 +19,7 @@ class VideoCog(BaseCog):
         await super().cog_load()
 
         self.channel_videos = discord.utils.find(lambda c: c.name == 'videos', self.guild.channels)
-    
+
     @commands.command(name='video')
     async def video(self, ctx, url: str, *, message: typing.Optional[str]):
         """
@@ -67,14 +67,17 @@ class VideoCog(BaseCog):
                 if response.reason == 'OK':
                     await ctx.send("OK ✅, j'arrive bien à accéder au lien !")
                 else:
-                    await ctx.send(f"⚠️ ATTENTION ⚠️ : j'ai essayé d'accèder au lien et ça ne marche pas (Erreur {response.reason}), c'est peut-être pas grave mais on ne sait jamais, vérifiez ! {ctx.author.mention}")
+                    await ctx.send(
+                        f"⚠️ ATTENTION ⚠️ : j'ai essayé d'accèder au lien et ça ne marche pas (Erreur {response.reason}), c'est peut-être pas grave mais on ne sait jamais, vérifiez ! {ctx.author.mention}")
         except urllib.request.URLError:
-            await ctx.send(f"⚠️ ATTENTION ⚠️ : j'ai essayé d'accèder au lien et ça ne marche pas, c'est peut-être pas grave mais on ne sait jamais, vérifiez ! {ctx.author.mention}")
+            await ctx.send(
+                f"⚠️ ATTENTION ⚠️ : j'ai essayé d'accèder au lien et ça ne marche pas, c'est peut-être pas grave mais on ne sait jamais, vérifiez ! {ctx.author.mention}")
 
     @video.error
     async def video_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Utilisation: !video <url> [message]')
+
 
 async def setup(bot):
     await bot.add_cog(VideoCog(bot))

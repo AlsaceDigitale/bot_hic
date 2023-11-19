@@ -7,6 +7,7 @@ from .base_cog import BaseCog
 
 log = structlog.get_logger()
 
+
 class TeamCog(BaseCog):
     """
     Equipes
@@ -25,7 +26,8 @@ class TeamCog(BaseCog):
         await super().cog_load()
 
         self.role_chef = discord.utils.find(lambda c: c.name == self.settings.PROJECT_LEAD_ROLE, self.guild.roles)
-        self.category_participants = discord.utils.find(lambda c: c.name == self.settings.PARTICIPANT_ROLE, self.guild.categories)
+        self.category_participants = discord.utils.find(lambda c: c.name == self.settings.PARTICIPANT_ROLE,
+                                                        self.guild.categories)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):

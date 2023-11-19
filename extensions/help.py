@@ -15,15 +15,15 @@ class HelpCog(BaseCog):
         await super().cog_load()
 
         self.channel_help = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_HELP, self.guild.channels)
-        self.channel_support = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_SUPPORT, self.guild.channels)
-
+        self.channel_support = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_SUPPORT,
+                                                  self.guild.channels)
 
     @commands.command(name='aide')
     async def aide(self, ctx):
         """
         Affiche un embed avec des informations pour obtenir de l'aide
         """
-        
+
         utils = self.bot.get_cog('UtilsCog')
 
         embed = discord.Embed(title=f"==== {utils.settings.EVENT_NAME} - Aide ====")
@@ -42,10 +42,9 @@ class HelpCog(BaseCog):
                               "Une fois le sondage terminé, le résultat s'affiche et vous ne pouvez plus voter.\n"
                               "\n**LIENS**\n"
                               " - HIC: https://www.hackingindustry.camp/#/ \n"
-                              " - Le sparkboard: https://hic2021-2.sparkboard.com/ \n"                             
+                              " - Le sparkboard: https://hic2021-2.sparkboard.com/ \n"
                               " - L'agenda: <#806577615959490650> \n"
-                             " - L'association: http://www.alsacedigitale.org/")
-                            
+                              " - L'association: http://www.alsacedigitale.org/")
 
         await ctx.send(embed=embed)
 
@@ -54,12 +53,12 @@ class HelpCog(BaseCog):
         """
         Appelle à l'aide un organisateur dans le salon "demande d'aide"
         """
-        
+
         organisateurs = discord.utils.find(lambda c: c.name == self.settings.ORGA_ROLE, self.guild.roles)
 
-        await self.channel_help.send(f"{ctx.author.mention} appelle le groupe {organisateurs.mention} à l'aide dans le salon {ctx.message.channel.mention} !")
+        await self.channel_help.send(
+            f"{ctx.author.mention} appelle le groupe {organisateurs.mention} à l'aide dans le salon {ctx.message.channel.mention} !")
         await ctx.message.add_reaction(reactions.SUCCESS)
-
 
     @commands.command(name='coach')
     async def coach(self, ctx):
@@ -68,9 +67,9 @@ class HelpCog(BaseCog):
         """
         organisateurs = discord.utils.find(lambda c: c.name == self.settings.COACH_ROLE, self.guild.roles)
 
-        await self.channel_help.send(f"{ctx.author.mention} appelle le groupe {organisateurs.mention} à l'aide dans le salon {ctx.message.channel.mention} !")
+        await self.channel_help.send(
+            f"{ctx.author.mention} appelle le groupe {organisateurs.mention} à l'aide dans le salon {ctx.message.channel.mention} !")
         await ctx.message.add_reaction(reactions.SUCCESS)
-
 
     @commands.command(name='support')
     async def support(self, ctx):
@@ -79,9 +78,10 @@ class HelpCog(BaseCog):
         """
         organisateurs = discord.utils.find(lambda c: c.name == self.settings.ADMIN_ROLE, self.guild.roles)
 
-        await self.channel_support.send(f"{ctx.author.mention} appelle le groupe {organisateurs.mention} à l'aide dans le salon {ctx.message.channel.mention} !")
+        await self.channel_support.send(
+            f"{ctx.author.mention} appelle le groupe {organisateurs.mention} à l'aide dans le salon {ctx.message.channel.mention} !")
         await ctx.message.add_reaction(reactions.SUCCESS)
 
-  
+
 async def setup(bot):
     await bot.add_cog(HelpCog(bot))

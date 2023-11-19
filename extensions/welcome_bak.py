@@ -25,11 +25,11 @@ class WelcomeCog(BaseCog):
         self.channel_bdd_users = None
         self.channel_bdd_users_link = None
 
-
     async def cog_load(self):
         await super().cog_load()
 
-        self.channel_welcome = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_WELCOME, self.guild.channels)
+        self.channel_welcome = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_WELCOME,
+                                                  self.guild.channels)
         self.channel_help = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_HELP, self.guild.channels)
         self.channel_bdd_users = discord.utils.find(lambda c: c.name == 'users', self.guild.channels)
         self.channel_bdd_users_link = discord.utils.find(lambda c: c.name == 'users_link', self.guild.channels)
@@ -53,7 +53,7 @@ class WelcomeCog(BaseCog):
                         'mail': data[2].strip().lower(),
                         'role': data[3].strip()
                     })
-    
+
     async def loadUsersLink(self):
         self.users_link = []
 
@@ -88,7 +88,7 @@ class WelcomeCog(BaseCog):
                 f"Je suis {self.bot.user.mention}, je suis le gentil robot du {self.settings.EVENT_NAME}\n\n"
                 f"L'évenement n'a pas encore débuté ! Je reviendrai vers vous lors du lancement du {self.settings.EVENT_NAME}."
             )
-        
+
             await dm_channel.send(msg)
 
     @commands.Cog.listener()
@@ -112,20 +112,24 @@ class WelcomeCog(BaseCog):
 
                 if self.settings.WELCOME_MODE == 'open':
                     if not re.search('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', content):
-                        await channel.send("Je n'ai pas compris votre message :'(\nMerci de m'envoyer l'adresse email saisie lors de votre inscription au HIC.")
+                        await channel.send(
+                            "Je n'ai pas compris votre message :'(\nMerci de m'envoyer l'adresse email saisie lors de votre inscription au HIC.")
                         return
 
                     user = next((user for user in self.users if user["mail"] == content), None)
 
                     if user is None:
-                        await channel.send("Désolé ! Je n’arrive pas à reconnaître votre adresse ! J’ai envoyé un message aux organisateurs pour qu’ils viennent vous aider !")
-                        await self.channel_help.send(f"{member.mention} n’a pas été reconnu(e) dans la liste des participants, merci de le contacter !")
+                        await channel.send(
+                            "Désolé ! Je n’arrive pas à reconnaître votre adresse ! J’ai envoyé un message aux organisateurs pour qu’ils viennent vous aider !")
+                        await self.channel_help.send(
+                            f"{member.mention} n’a pas été reconnu(e) dans la liste des participants, merci de le contacter !")
                         return
-                    
+
                     role = discord.utils.find(lambda r: r.name == user['role'], self.guild.roles)
 
                     if role is None:
-                        await channel.send("Désolé ! Je n’arrive pas à reconnaître le rôle que je dois t'assigner ! J’ai envoyé un message aux organisateurs pour qu’ils viennent vous aider !")
+                        await channel.send(
+                            "Désolé ! Je n’arrive pas à reconnaître le rôle que je dois t'assigner ! J’ai envoyé un message aux organisateurs pour qu’ils viennent vous aider !")
                         await self.channel_help.send(f"Le rôle {user['role']} de {member.mention} n’existe pas !")
                         return
 
@@ -137,7 +141,8 @@ class WelcomeCog(BaseCog):
                         f"Vous pouvez me demander de l’aide à tout moment en tapant !aide"
                     ))
 
-                    await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !")
+                    await self.channel_welcome.send(
+                        f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !")
                     await self.channel_bdd_users_link.send(f"{member.mention},{user['mail']}")
                 elif self.settings.WELCOME_MODE == 'close':
                     await channel.send((
@@ -145,7 +150,7 @@ class WelcomeCog(BaseCog):
                         f"Je ne suis pas en mesure de vous répondre avant le lancement du {self.settings.EVENT_NAME} :'(\n"
                         f"Je reviendrai vers vous lors du lancement !"
                     ))
-    
+
     @commands.Cog.listener()
     async def on_raw_message_edit(self, payload):
         channel_id = payload.channel_id
@@ -181,7 +186,7 @@ class WelcomeCog(BaseCog):
 
                 if dm_channel is None:
                     dm_channel = await member.create_dm()
-     
+
                 msg = (
                     f"Bonjour {member.mention} vous débarquez ici, on dirait !\n"
                     f"Je suis {self.bot.user.mention}, je suis un gentil robot et je vais vous accompagner\n"
@@ -201,14 +206,15 @@ class WelcomeCog(BaseCog):
         for user in self.users:
             if user['role'] not in roles_count:
                 roles_count[user['role']] = 1
-            else:            
+            else:
                 roles_count[user['role']] += 1
 
         msg = "Nombre d'utilisateur par rôle :\n"
         for role, count in roles_count.items():
             msg += f"  - {role}: {count}\n"
-        
+
         await ctx.send(msg)
+
 
 def setup(bot):
     bot.add_cog(WelcomeCog(bot))

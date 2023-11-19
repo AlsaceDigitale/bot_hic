@@ -1,6 +1,8 @@
 import structlog
 
 log = structlog.get_logger('perms')
+
+
 def is_support_user(ctx):
     # reject if not in a server channel
     if ctx.guild is None:

@@ -12,6 +12,7 @@ from . import settings, perms
 
 log = structlog.get_logger()
 
+
 class UtilsCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -33,8 +34,8 @@ class UtilsCog(commands.Cog):
             log.error('Could not post message to bot log channel', exc_info=e)
 
     async def trace_exception(self, *args, exc_info=None, **kwargs):
-        s=f"Exception: {args} {kwargs}\n"
-        s+=traceback.format_stack()
+        s = f"Exception: {args} {kwargs}\n"
+        s += traceback.format_stack()
         await self.bot_log_message(s)
 
     @commands.Cog.listener()
@@ -82,7 +83,8 @@ class UtilsCog(commands.Cog):
         async for message in ctx.history(limit=None):
             if message.created_at.date() <= date:
                 await message.delete()
-                await asyncio.sleep(0.1)    # rate limiting
+                await asyncio.sleep(0.1)  # rate limiting
+
 
 async def setup(bot):
     await bot.add_cog(UtilsCog(bot))

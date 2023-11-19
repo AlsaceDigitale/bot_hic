@@ -20,21 +20,22 @@ class AutoMessageCog(BaseCog):
 
     async def cog_load(self):
         await super().cog_load()
-        self.channel_msg_auto = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_MSG_AUTO , self.guild.channels)
-        
+        self.channel_msg_auto = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_MSG_AUTO,
+                                                   self.guild.channels)
+
         await self.loadMessagesAuto()
         self.send_msg_auto.start()
 
     def stripList(self, l):
-        return list(map(lambda s : s.strip(), l))
-    
+        return list(map(lambda s: s.strip(), l))
+
     def checkNumber(self, text):
         try:
             val = int(text)
-            
+
             if val >= 0:
                 return val
-            
+
             return None
         except ValueError:
             return None
@@ -59,7 +60,7 @@ class AutoMessageCog(BaseCog):
                 print('Auto Message: Error 2')
                 await message.add_reaction('👎')
                 continue
-            
+
             raw_headers, body = self.stripList(headers_body)
 
             if len(body) < 1:
@@ -68,7 +69,7 @@ class AutoMessageCog(BaseCog):
                 continue
 
             obj = dict({
-                'id' : message.id,
+                'id': message.id,
                 'couleur': 2013674,
                 'body': body
             })
@@ -76,7 +77,7 @@ class AutoMessageCog(BaseCog):
             for raw_header in raw_headers.split('\n'):
                 if ':' not in raw_header:
                     continue
-                
+
                 key, value = self.stripList(raw_header.split(':', 1))
 
                 if key == '' or value == '':
@@ -86,7 +87,7 @@ class AutoMessageCog(BaseCog):
                     obj['date'] = datetime.strptime(value, '%d/%m/%Y %H:%M')
                 elif key == 'Salons':
                     if ' ' in value:
-                        obj['salons'] = list(map(lambda s : int(s[2:-1].strip()), value.split(' ')))
+                        obj['salons'] = list(map(lambda s: int(s[2:-1].strip()), value.split(' ')))
                     else:
                         obj[key.lower()] = [int(value[2:-1])]
                 elif key == 'Couleur':
@@ -114,7 +115,7 @@ class AutoMessageCog(BaseCog):
                 continue
 
             self.messages.append(obj)
-    
+
     @tasks.loop(seconds=30.0)
     async def send_msg_auto(self):
         now = datetime.now().replace(second=0)
@@ -171,6 +172,7 @@ class AutoMessageCog(BaseCog):
 
             if channel_id == self.channel_msg_auto.id:
                 await self.loadMessagesAuto()
+
 
 async def setup(bot):
     await bot.add_cog(AutoMessageCog(bot))

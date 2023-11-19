@@ -17,7 +17,6 @@ class BaseCog(commands.Cog):
         self.guid: Optional[Guild] = None
         self.settings: Settings = None
 
-
     async def cog_load(self):
         self.utils_cog = self.bot.get_cog('UtilsCog')
         self.settings = self.utils_cog.settings

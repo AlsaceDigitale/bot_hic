@@ -28,7 +28,7 @@ class WelcomeCog(BaseCog):
 
         if found_attendee is None:
             return
-        
+
         role = discord.utils.find(lambda r: r.name.lower() == found_attendee['role'].lower(), self.guild.roles)
 
         if role is None:
@@ -37,7 +37,8 @@ class WelcomeCog(BaseCog):
         if role not in member.roles:
             await member.add_roles(role)
             await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
-            await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !")
+            await self.channel_welcome.send(
+                f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !")
 
     @tasks.loop(minutes=5.0)
     async def checkAttendeesTask(self):
@@ -47,11 +48,12 @@ class WelcomeCog(BaseCog):
         attendees = requests.get(f"{self.settings.URL_API}/api/attendees/").json()
 
         async for member in self.guild.fetch_members(limit=None):
-            found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id), None)
+            found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id),
+                                  None)
 
             if found_attendee is None:
                 continue
-            
+
             role = discord.utils.find(lambda r: r.name.lower() == found_attendee['role'].lower(), self.guild.roles)
 
             if role is None:
@@ -59,16 +61,17 @@ class WelcomeCog(BaseCog):
 
             if role not in member.roles:
                 await member.add_roles(role)
-                await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !")
-                
+                await self.channel_welcome.send(
+                    f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !")
+
                 try:
-                    await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
+                    await member.edit(
+                        nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
                 except Forbidden:
                     pass
 
-
     @commands.command(name='checkAttendees')
-    async def checkAttendeesCommand(self, ctx): 
+    async def checkAttendeesCommand(self, ctx):
         await self.checkAttendees()
 
     @commands.command(name='changeNicks')
@@ -76,15 +79,18 @@ class WelcomeCog(BaseCog):
         attendees = requests.get(self.settings.URL_API_ATTENDEES).json()
 
         async for member in self.guild.fetch_members(limit=None):
-            found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id), None)
+            found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id),
+                                  None)
 
             if found_attendee is None:
                 continue
-            
+
             try:
-                await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
+                await member.edit(
+                    nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
             except Forbidden:
                 pass
+
 
 async def setup(bot):
     await bot.add_cog(WelcomeCog(bot))

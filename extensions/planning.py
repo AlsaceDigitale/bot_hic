@@ -39,7 +39,7 @@ class PlanningCog(BaseCog):
 
         req = requests.get(self.settings.EVENT_PLANNING_URL, allow_redirects=True)
         bio = BytesIO(req.content)
-        pdf = extract_text(bio)   
+        pdf = extract_text(bio)
 
         fields = [
             'planning',
@@ -47,11 +47,11 @@ class PlanningCog(BaseCog):
             'samedi 26 novembre 2022',
             'dimanche 27 novembre 2022'
         ]
-        
+
         idxs = []
         idx_ends = []
         opt_list = {'vendredi': 1, 'samedi': 2, 'dimanche': 3}
-        
+
         for f in fields:
             try:
                 idx = pdf.lower().index(f)
@@ -60,32 +60,33 @@ class PlanningCog(BaseCog):
                 idx_ends.append(idx_end)
             except ValueError:
                 pass
-            
+
         if period is None:
             for i in range(len(idxs)):
                 field_name = pdf[idxs[i]:idx_ends[i]]
-                msg_end = -1 if i+1>=len(idxs) else idxs[i+1]
+                msg_end = -1 if i + 1 >= len(idxs) else idxs[i + 1]
                 msg = pdf[idx_ends[i]:msg_end]
-                embed.add_field(name=field_name,value=msg)
+                embed.add_field(name=field_name, value=msg)
         elif period.lower() in opt_list:
             opt = period.lower()
             period = opt_list[opt]
             field_name = pdf[idxs[period]:idx_ends[period]]
-            msg_end = -1 if period+1>=len(idxs) else idxs[period+1]
+            msg_end = -1 if period + 1 >= len(idxs) else idxs[period + 1]
             msg = pdf[idx_ends[period]:msg_end]
-            embed.add_field(name=field_name,value=msg)
+            embed.add_field(name=field_name, value=msg)
         else:
             field_name = 'error'
             msg = "options possibles sont:\n"
             msg += "- `!planning` pour le planning entier\n"
-            
+
             for k in opt_list.keys():
                 msg += f"- `!planning {k}`\n"
-            
-            embed.add_field(name=field_name,value=msg)
-            
+
+            embed.add_field(name=field_name, value=msg)
+
         await dm_channel.send(embed=embed)
         await ctx.message.add_reaction(reactions.SUCCESS)
+
 
 def setup(bot):
     bot.add_cog(PlanningCog(bot))
