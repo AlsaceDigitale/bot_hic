@@ -99,6 +99,84 @@ class TeamCog(BaseCog):
             await member.remove_roles(nom_de_lequipe)
             await ctx.message.add_reaction(reactions.SUCCESS)
 
+    @commands.command(name='teamdown')
+    @commands.check(perms.is_support_user)
+    async def teamdown(self, ctx, nom_de_lequipe: str):
+        """"Supprimer une équipe"""
+
+        role = nom_de_lequipe
+
+        if not nom_de_lequipe.startswith("<@"):
+            role = discord.utils.find(lambda r: r.name == nom_de_lequipe, self.guild.roles)
+        else:
+            role = discord.utils.get(self.guild.roles, id=int(nom_de_lequipe[3:-1]))
+            nom_de_lequipe = role.name
+
+        message = ctx.message
+        author = ctx.author
+        server: discord.Guild = ctx.guild
+
+        role_names = [r.name for r in author.roles]
+
+        if self.settings.ADMIN_ROLE not in role_names:
+            await message.add_reaction(reactions.FAILURE)
+            await ctx.send(f"seuls les admins ({self.settings.ADMIN_ROLE}) peuvent faire cette action!")
+            return
+
+        if not role.name.startswith(self.settings.TEAM_PREFIX):
+            await message.add_reaction(reactions.FAILURE)
+            await ctx.send(f"Le nom d'équipe doit commencer par '{self.settings.TEAM_PREFIX}' !")
+            return
+
+        log.info('destroying team', role=role)
+
+        if role is None:
+            await message.add_reaction(reactions.FAILURE)
+            await ctx.send('Rôle non trouvé')
+        else:
+            members = []
+
+            for member in server.members:
+                if role in member.roles:
+                    members.append(member)
+
+            log.info('members', member=[m.name for m in members])
+
+            log.info('removing roles of members')
+
+            for m in members:
+                await m.remove_roles(role)
+
+            log.info('removing role')
+
+            await role.delete()
+
+            await ctx.send('Rôle supprimé')
+
+        log.info('removing channels')
+
+        channels = []
+
+        voice_channel = discord.utils.find(lambda c: c.name == nom_de_lequipe.lower(), server.voice_channels)
+
+        if voice_channel:
+            log.info('found voice channel', channel=voice_channel)
+            channels.append(voice_channel)
+
+        text_channel = discord.utils.find(lambda c: c.name == nom_de_lequipe.lower(), server.text_channels)
+
+        if text_channel:
+            log.info('found text channel', channel=text_channel)
+            channels.append(text_channel)
+
+        for c in channels:
+            log.info(f'deleting channel {c}')
+            await c.delete(reason='deleted team')
+            await ctx.send(f'Canal {c.name} supprimé')
+            await message.add_reaction(reactions.SUCCESS)
+
+        await ctx.send(f'Equipe {nom_de_lequipe} supprimée')
+
     @commands.command(name='teamup')
     @commands.check(perms.is_support_user)
     async def teamup(self, ctx, nom_de_lequipe: str, chef_de_projet: discord.Member,
