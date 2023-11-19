@@ -14,7 +14,6 @@ class PlanningCog(BaseCog):
     """
     Planning
     """
-    PLANNING_URL = 'https://www.hackingindustry.camp/HIC2022-Planning-Previsionnel.pdf'
 
     def __init__(self, bot):
         super().__init__(bot)

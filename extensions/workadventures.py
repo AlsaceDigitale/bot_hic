@@ -100,7 +100,7 @@ class WorkAdventuresCog(BaseCog):
                 continue
 
             await dm_channel.send(
-                f"Voici votre lien pour joindre Work Adventure du HIC : {user_workadventures['token']}")
+                f"Voici votre lien pour joindre Work Adventure du {self.settings.EVENT_NAME} : {user_workadventures['token']}")
 
 
 async def setup(bot):

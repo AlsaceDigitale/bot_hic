@@ -113,7 +113,7 @@ class WelcomeCog(BaseCog):
                 if self.settings.WELCOME_MODE == 'open':
                     if not re.search('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', content):
                         await channel.send(
-                            "Je n'ai pas compris votre message :'(\nMerci de m'envoyer l'adresse email saisie lors de votre inscription au HIC.")
+                            f"Je n'ai pas compris votre message :'(\nMerci de m'envoyer l'adresse email saisie lors de votre inscription au {self.settings.EVENT_NAME}.")
                         return
 
                     user = next((user for user in self.users if user["mail"] == content), None)
@@ -137,7 +137,7 @@ class WelcomeCog(BaseCog):
                     await member.edit(nick=f"{user['firstname']} {user['name'][0]}.")
 
                     await channel.send((
-                        f"Bienvenue au HIC ! Vous êtes reconnu(e) en tant que {user['role']}, vous avez maintenant accès à l’ensemble des canaux\n"
+                        f"Bienvenue au {self.settings.EVENT_NAME} ! Vous êtes reconnu(e) en tant que {user['role']}, vous avez maintenant accès à l’ensemble des canaux\n"
                         f"Vous pouvez me demander de l’aide à tout moment en tapant !aide"
                     ))
 
