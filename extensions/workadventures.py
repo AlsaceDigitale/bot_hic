@@ -1,8 +1,10 @@
 import discord
 from discord.ext import commands
 from . import perms
+from .base_cog import BaseCog
 
-class WorkAdventuresCog(commands.Cog):
+
+class WorkAdventuresCog(BaseCog):
     guild = None
     welcome_cog = None
 
@@ -12,16 +14,14 @@ class WorkAdventuresCog(commands.Cog):
     channel_bdd_workadventures = None
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         print(error)
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.utils_cog = self.bot.get_cog('UtilsCog')
-        self.guild = self.utils_cog.settings.guild
+    async def cog_load(self):
+        await super().cog_load()
 
         self.welcome_cog = self.bot.get_cog('WelcomeCog')
 

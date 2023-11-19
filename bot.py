@@ -17,6 +17,8 @@ TOKEN = os.getenv('BOT_TOKEN')
 
 BOT_PREFIX = os.getenv('BOT_PREFIX', '!')
 
+log.info('starting bot', prefix=BOT_PREFIX)
+
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=BOT_PREFIX,  case_insensitive=True, intents=intents)
 

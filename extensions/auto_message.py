@@ -1,24 +1,26 @@
 import re
-import discord
-from discord.ext import tasks, commands
 from datetime import datetime
 
-class AutoMessageCog(commands.Cog):
+import discord
+import discord.state
+from discord.ext import tasks, commands
+
+from extensions.base_cog import BaseCog
+
+
+class AutoMessageCog(BaseCog):
     guild = None
     messages = []
 
     channel_msg_auto = None
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
+        self.channel_msg_auto = None
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-
-        self.utils_cog = self.bot.get_cog('UtilsCog')
-        self.guild = self.utils_cog.settings.guild
-
-        self.channel_msg_auto = await discord.utils.find(lambda c: c.name == 'msg_auto', self.guild.channels)
+    async def cog_load(self):
+        await super().cog_load()
+        self.channel_msg_auto = discord.utils.find(lambda c: c.name == 'msg_auto', self.guild.channels)
         
         await self.loadMessagesAuto()
         self.send_msg_auto.start()

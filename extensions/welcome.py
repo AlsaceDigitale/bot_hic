@@ -3,21 +3,22 @@ from discord.errors import Forbidden
 import requests
 from discord.ext import tasks, commands
 
-class WelcomeCog(commands.Cog):
+from extensions.base_cog import BaseCog
+
+
+class WelcomeCog(BaseCog):
     guild = None
     utils_cog = None
 
     channel_welcome = None
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.utils_cog = self.bot.get_cog('UtilsCog')
-        self.guild = self.utils_cog.settings.guild
+    async def cog_load(self):
+        await super().cog_load()
 
-        self.channel_welcome = discord.utils.find(lambda c: c.name == 'bienvenue', guild.channels)
+        self.channel_welcome = discord.utils.find(lambda c: c.name == 'bienvenue', self.guild.channels)
 
         self.checkAttendeesTask.start()
 

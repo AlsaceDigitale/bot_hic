@@ -1,17 +1,17 @@
 import discord
 from discord.ext import commands
 
-class HelpCog(commands.Cog):
+from extensions.base_cog import BaseCog
+
+
+class HelpCog(BaseCog):
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
+        self.channel_help = None
+        self.channel_support = None
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.utils_cog = self.bot.get_cog('UtilsCog')
-
-        for guild in self.bot.guilds:
-            if guild.name.startswith(self.utils_cog.SERVER_NAME):
-                self.guild = guild
+    async def cog_load(self):
+        await super().cog_load()
 
         self.channel_help = discord.utils.find(lambda c: c.name == self.utils_cog.settings.CHANNEL_HELP, self.guild.channels)
         self.channel_support = discord.utils.find(lambda c: c.name == self.utils_cog.settings.CHANNEL_SUPPORT, self.guild.channels)

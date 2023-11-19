@@ -1,10 +1,11 @@
 import discord
-from discord import utils
 from discord.ext import commands
 
 from . import perms
+from .base_cog import BaseCog
 
-class PollCog(commands.Cog):
+
+class PollCog(BaseCog):
     """
     Sondages
     """
@@ -12,14 +13,13 @@ class PollCog(commands.Cog):
     REACTIONS_MULTI = ['🇦', '🇧', '🇨', '🇩', '🇪', '🇫', '🇬', '🇭', '🇮', '🇯', '🇰', '🇱', '🇲', '🇳', '🇴', '🇵', '🇶', '🇷', '🇸', '🇹', '🇺', '🇻', '🇼', '🇽', '🇾', '🇿']
     
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
+        self.voting_channel = None
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.utils_cog = self.bot.get_cog('UtilsCog')
-        self.guild = self.utils_cog.settings.guild
+    async def cog_load(self):
+        await super().cog_load()
 
-        self.voting_channel = discord.utils.find(lambda c: c.name == self.utils_cog.settings.CHANNEL_VOTE, guild.channels)
+        self.voting_channel = discord.utils.find(lambda c: c.name == self.utils_cog.settings.CHANNEL_VOTE, self.guild.channels)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):

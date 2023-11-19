@@ -2,8 +2,10 @@ import re
 import discord
 from discord.ext import commands
 from . import perms
+from .base_cog import BaseCog
 
-class WelcomeCog(commands.Cog):
+
+class WelcomeCog(BaseCog):
     guild = None
     utils_cog = None
 
@@ -16,12 +18,15 @@ class WelcomeCog(commands.Cog):
     channel_bdd_users_link = None
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
+        self.channel_welcome = None
+        self.channel_help = None
+        self.channel_bdd_users = None
+        self.channel_bdd_users_link = None
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.utils_cog = self.bot.get_cog('UtilsCog')
-        self.guild = self.utils_cog.settings.guild
+
+    async def cog_load(self):
+        await super().cog_load()
 
         self.channel_welcome = discord.utils.find(lambda c: c.name == 'bienvenue', self.guild.channels)
         self.channel_help = discord.utils.find(lambda c: c.name == 'demandes-aide', self.guild.channels)

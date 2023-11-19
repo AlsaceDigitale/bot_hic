@@ -1,10 +1,13 @@
 import discord
 import requests
+import structlog
 from discord.ext import commands
 from . import perms
+from .base_cog import BaseCog
 
+log = structlog.get_logger()
 
-class TeamCog(commands.Cog):
+class TeamCog(BaseCog):
     """
     Equipes
     """
@@ -16,15 +19,13 @@ class TeamCog(commands.Cog):
     category_particpants = None
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.utils_cog = self.bot.get_cog('UtilsCog')
-        self.guild = self.utils_cog.settings.guild
+    async def cog_load(self):
+        await super().cog_load()
 
-        self.role_chef = discord.utils.find(lambda c: c.name == 'Chef de Projet', guild.roles)
-        self.category_particpants = discord.utils.find(lambda c: c.name == 'Participants', guild.categories)
+        self.role_chef = discord.utils.find(lambda c: c.name == 'Chef de Projet', self.guild.roles)
+        self.category_particpants = discord.utils.find(lambda c: c.name == 'Participants', self.guild.categories)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -44,6 +45,8 @@ class TeamCog(commands.Cog):
                     await message.add_reaction('\U0001F44E')
                     await ctx.send(
                         "Erreur! La commande est du type `!teamup nom_de_lequipe chef_de_projet membre1 [membreX...]`")
+        else:
+            log.error(error)
 
     @commands.command(name='teamadd')
     @commands.check(perms.is_support_user)

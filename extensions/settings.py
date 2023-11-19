@@ -1,8 +1,11 @@
 import os
 
 import discord
+import structlog
 from discord import utils
 from discord.ext import commands
+
+log = structlog.get_logger()
 
 
 class Settings:
@@ -26,10 +29,12 @@ class Settings:
         self.bot = bot
         self.guild = None
 
-    async def on_ready(self):
+    async def cog_load(self):
         for guild in self.bot.guilds:
             if guild.name.startswith(self.SERVER_NAME):
                 self.guild = guild
+                break
+        log.debug('settings: ready')
 
     def as_string(self):
         ret = ""

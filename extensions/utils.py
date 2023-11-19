@@ -4,7 +4,7 @@ import discord
 from discord import errors
 from discord.enums import ChannelType
 from discord.ext import commands
-import structlog 
+import structlog
 from datetime import datetime
 
 import os
@@ -27,14 +27,14 @@ class UtilsCog(commands.Cog):
             if BOT_LOG_CHANNEL_ID:
                 BOT_LOG_CHANNEL_ID = int(BOT_LOG_CHANNEL_ID)
                 bot_log_channel = discord.utils.get(self.bot.get_all_channels(), id=BOT_LOG_CHANNEL_ID)
-                
+
                 if bot_log_channel:
                     await bot_log_channel.send(*args, **kwargs)
                 else:
                     log.warning(f'Could not find bot log channel with id {BOT_LOG_CHANNEL_ID}')
         except Exception as e:
             log.error('Could not post message to bot log channel', exc_info=e)
-            
+
     async def trace_exception(self, *args, exc_info=None, **kwargs):
         s=f"Exception: {args} {kwargs}\n"
         s+=traceback.format_stack()
@@ -43,11 +43,10 @@ class UtilsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         print(error)
+    async def cog_load(self):
+        await self.settings.cog_load()
+        log.debug('utils: ready')
 
-    @commands.Cog.listener()
-    async def on_ready(self, ctx):
-        await self.settings.on_ready()
-        
     @commands.command(name='crash_log')
     @commands.check(perms.is_support_user)
     async def crash_log(self, ctx):
@@ -56,13 +55,18 @@ class UtilsCog(commands.Cog):
             raise "Test exception"
         except Exception as e:
             await self.trace_exception("It's only a test")
-            
+
     @commands.command(name='show_settings')
     @commands.check(perms.is_support_user)
     async def show_settings(self, ctx):
         await ctx.reply("Settings")
         await ctx.reply("-------")
         await ctx.reply(self.settings.as_string())
+
+    @commands.command(name='show_categories')
+    @commands.check(perms.is_support_user)
+    async def show_categories(self, ctx):
+        ctx.reply('\n'.join(cat.name for cat in self.settings.guild.categories))
 
     @commands.command(name='purge')
     @commands.check(perms.is_support_user)

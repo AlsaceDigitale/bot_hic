@@ -1,18 +1,22 @@
 import typing
+from io import BytesIO
+
 import discord
 import requests
-from io import BytesIO
 from discord.ext import commands
 from pdfminer.high_level import extract_text
 
-class PlanningCog(commands.Cog):
+from extensions.base_cog import BaseCog
+
+
+class PlanningCog(BaseCog):
     """
     Planning
     """
     PLANNING_URL = 'https://www.hackingindustry.camp/HIC2022-Planning-Previsionnel.pdf'
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
     @commands.command(name='planning', aliases=['agenda'])
     async def planning(self, ctx, period: typing.Optional[str] = None):

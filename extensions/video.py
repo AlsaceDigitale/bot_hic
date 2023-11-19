@@ -4,16 +4,18 @@ import discord
 import urllib.request
 from discord.ext import commands
 
-class VideoCog(commands.Cog):
+from extensions.base_cog import BaseCog
+
+
+class VideoCog(BaseCog):
     channel_videos = None
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
+        self.channel_videos = None
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.utils_cog = self.bot.get_cog('UtilsCog')
-        self.guild = self.utils_cog.settings.guild
+    async def cog_load(self):
+        await super().cog_load()
 
         self.channel_videos = discord.utils.find(lambda c: c.name == 'videos', self.guild.channels)
     
