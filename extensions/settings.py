@@ -7,6 +7,11 @@ from discord.ext import commands
 
 log = structlog.get_logger()
 
+DEFAULT_HELP_LINKS = "HIC|https://www.hackingindustry.camp," \
+                     "Le sparkboard|https://hic2021-2.sparkboard.com," \
+                     "L'agenda|canal #planning," \
+                     "L'association|https://www.alsacedigitale.org"
+
 
 class Settings:
     def __init__(self, bot):
@@ -18,6 +23,7 @@ class Settings:
         self.ORGA_ROLE = os.getenv('BOT_ORGA_ROLE', 'Organisation')
         self.WELCOME_MODE = os.getenv('BOT_WELCOME_MODE', 'close')  # mode 'open' ou 'close'
         self.TEAM_PREFIX = os.getenv('BOT_TEAM_PREFIX', 'Equipe-')
+        self.HELP_LINKS = os.getenv('BOT_HELP_LINKS', DEFAULT_HELP_LINKS)
         self.CHANNEL_HELP = os.getenv('BOT_CHANNEL_HELP', 'demandes-aide')
         self.CHANNEL_SUPPORT = os.getenv('BOT_CHANNEL_SUPPORT', 'support-technique')
         self.CHANNEL_WELCOME = os.getenv('BOT_CHANNEL_WELCOME', 'bienvenue')
@@ -51,3 +57,19 @@ class Settings:
                 ret += f"{k}={v}\n"
 
         return ret
+
+    def get_role(self, role_code):
+        setting = f"{role_code.upper()}_ROLE"
+        setting_value = getattr(self, setting)
+
+        role = discord.utils.get(self.guild.roles, name=setting_value)
+
+        return role
+
+    def get_channel(self, channel_code):
+        setting = f"CHANNEL_{channel_code.upper()}"
+        setting_value = getattr(self, setting)
+
+        channel = discord.utils.get(self.guild.text_channels, name=setting_value)
+
+        return channel

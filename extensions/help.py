@@ -29,22 +29,35 @@ class HelpCog(BaseCog):
         embed = discord.Embed(title=f"==== {utils.settings.EVENT_NAME} - Aide ====")
 
         # TODO: get channel ids from Discord
-        # TODO: make links configurable
         embed.description = "- `!help` : pour obtenir l'aide des commandes. Certains commandes fonctionnent en parlant directement avec le bot, "
         embed.description += "n'hésitez pas à lui parler directement plutôt qu'encombrer les canaux de discussion.\n"
-        embed.description += "- `<@&806281615894380595>` : pour appeler **tous** les bénévole. Autrement faite !support\n"
-        embed.description += "- `<@&804097679117385728>` : pour appeler **tous** les facilitateurs. Autrement faites !coach\n"
-        embed.description += f"- `<@&805887766592225280>` : si quelqu'un doit passer au conseil disciplinaire. Autrement faite !orga\n"
+        # embed.description += "- `<@&806281615894380595>` : pour appeler **tous** les bénévole. Autrement faite !support\n"
+        embed.description += f"- {self.settings.get_role('FACILITATEUR').mention} : pour appeler **tous** les facilitateurs. Autrement faites `!coach`\n"
+        embed.description += f"- {self.settings.get_role('ORGA').mention} : si quelqu'un doit passer au conseil disciplinaire. Autrement faite `!orga`\n"
         embed.description += "\n"
-        embed.description += ("**Votes et sondages**\n"
-                              f"Les sondages apparaissent dans le canal Participants > <#AREMPLACER>"
-                              " Votez en cliquant sur les emojis qui se trouvent sous chaque sondage. Il y a un nombre max de votes par participant! "
-                              "Une fois le sondage terminé, le résultat s'affiche et vous ne pouvez plus voter.\n"
-                              "\n**LIENS**\n"
-                              " - HIC: https://www.hackingindustry.camp/#/ \n"
-                              " - Le sparkboard: https://hic2021-2.sparkboard.com/ \n"
-                              " - L'agenda: <#806577615959490650> \n"
-                              " - L'association: http://www.alsacedigitale.org/")
+        embed.description += "**Votes et sondages**\n" \
+                             f"Les sondages apparaissent dans le canal {self.settings.get_channel('VOTE').mention}. " \
+                             "Votez en cliquant sur les emojis qui se trouvent sous chaque sondage. Il y a un nombre max de votes par participant ! " \
+                             "Une fois le sondage terminé, le résultat s'affiche et vous ne pouvez plus voter.\n"
+
+        help_links = []
+
+        for entry in self.settings.HELP_LINKS.split(','):
+            if '|' in entry:
+                k, v = entry.split('|')
+                help_links.append([k, v])
+            else:
+                help_links.append([entry])
+
+        if help_links:
+            embed.description += "\n**LIENS**\n"
+
+            for entry in help_links:
+                embed.description += " - "
+                if len(entry) == 2:
+                    embed.description += f"{entry[0]}: {entry[1]}\n"
+                else:
+                    embed.description += f"{entry[0]}\n"
 
         await ctx.send(embed=embed)
 
