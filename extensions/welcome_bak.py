@@ -9,7 +9,6 @@ from .base_cog import BaseCog
 
 class WelcomeCog(BaseCog):
     guild = None
-    utils_cog = None
 
     users = []
     users_link = []

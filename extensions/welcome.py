@@ -8,8 +8,6 @@ from extensions.base_cog import BaseCog
 
 class WelcomeCog(BaseCog):
     guild = None
-    utils_cog = None
-
     channel_welcome = None
 
     def __init__(self, bot):

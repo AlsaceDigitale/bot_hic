@@ -55,8 +55,7 @@ class HelpCog(BaseCog):
         Appelle à l'aide un organisateur dans le salon "demande d'aide"
         """
         
-        utils_cog = self.bot.get_cog('UtilsCog')
-        organisateurs = discord.utils.find(lambda c: c.name == utils_cog.settings.ORGA_ROLE, self.guild.roles)        
+        organisateurs = discord.utils.find(lambda c: c.name == self.settings.ORGA_ROLE, self.guild.roles)
 
         await self.channel_help.send(f"{ctx.author.mention} appelle le groupe {organisateurs.mention} à l'aide dans le salon {ctx.message.channel.mention} !")
         await ctx.message.add_reaction(reactions.SUCCESS)
@@ -67,9 +66,7 @@ class HelpCog(BaseCog):
         """
         Appelle à l'aide un coach dans le salon "demande d'aide"
         """
-        
-        utils_cog = self.bot.get_cog('UtilsCog')
-        organisateurs = discord.utils.find(lambda c: c.name == utils_cog.settings.COACH_ROLE, self.guild.roles)        
+        organisateurs = discord.utils.find(lambda c: c.name == self.settings.COACH_ROLE, self.guild.roles)
 
         await self.channel_help.send(f"{ctx.author.mention} appelle le groupe {organisateurs.mention} à l'aide dans le salon {ctx.message.channel.mention} !")
         await ctx.message.add_reaction(reactions.SUCCESS)
@@ -80,9 +77,7 @@ class HelpCog(BaseCog):
         """
         Appelle à l'aide un support dans le salon "support technique"
         """
-        
-        utils_cog = self.bot.get_cog('UtilsCog')
-        organisateurs = discord.utils.find(lambda c: c.name == utils_cog.settings.ADMIN_ROLE, self.guild.roles)        
+        organisateurs = discord.utils.find(lambda c: c.name == self.settings.ADMIN_ROLE, self.guild.roles)
 
         await self.channel_support.send(f"{ctx.author.mention} appelle le groupe {organisateurs.mention} à l'aide dans le salon {ctx.message.channel.mention} !")
         await ctx.message.add_reaction(reactions.SUCCESS)

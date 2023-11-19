@@ -54,21 +54,18 @@ class TeamCog(BaseCog):
         """
         Rajouter des participants à une équipe. Déjà existante. Si vous voulez créer l'équipe, faites `!teamup`
         """
-
-        utils_cog = self.bot.get_cog('UtilsCog')
-
         message = ctx.message
         author = ctx.author
         role_names = [r.name for r in author.roles]
 
         if self.settings.ADMIN_ROLE not in role_names:
             await message.add_reaction(reactions.FAILURE)
-            await ctx.send(f"seuls les admins ({utils_cog.settings.ADMIN_ROLE}) peuvent faire cette action!")
+            await ctx.send(f"seuls les admins ({self.settings.ADMIN_ROLE}) peuvent faire cette action!")
             return
 
-        if not nom_de_lequipe.name.startswith(utils_cog.settings.TEAM_PREFIX):
+        if not nom_de_lequipe.name.startswith(self.settings.TEAM_PREFIX):
             await message.add_reaction(reactions.FAILURE)
-            await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
+            await ctx.send(f"Le nom d'équipe doit commencer par '{self.settings.TEAM_PREFIX}' !")
             return
 
         for member in members:
@@ -82,21 +79,18 @@ class TeamCog(BaseCog):
         """
         Enlever des participants à une équipe.
         """
-
-        utils_cog = self.bot.get_cog('UtilsCog')
-
         message = ctx.message
         author = ctx.author
         role_names = [r.name for r in author.roles]
 
-        if utils_cog.settings.ADMIN_ROLE not in role_names:
+        if self.settings.ADMIN_ROLE not in role_names:
             await message.add_reaction(reactions.FAILURE)
-            await ctx.send(f"seuls les admins ({utils_cog.settings.ADMIN_ROLE}) peuvent faire cette action!")
+            await ctx.send(f"seuls les admins ({self.settings.ADMIN_ROLE}) peuvent faire cette action!")
             return
 
-        if not nom_de_lequipe.name.startswith(utils_cog.settings.TEAM_PREFIX):
+        if not nom_de_lequipe.name.startswith(self.settings.TEAM_PREFIX):
             await message.add_reaction(reactions.FAILURE)
-            await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
+            await ctx.send(f"Le nom d'équipe doit commencer par '{self.settings.TEAM_PREFIX}' !")
             return
 
         for member in members:
@@ -118,14 +112,14 @@ class TeamCog(BaseCog):
         server: discord.Guild = ctx.guild
         role_names = [r.name for r in author.roles]
 
-        if utils_cog.settings.ADMIN_ROLE not in role_names:
+        if self.settings.ADMIN_ROLE not in role_names:
             await message.add_reaction(reactions.FAILURE)
-            await ctx.send(f"seuls les admins ({utils_cog.settings.ADMIN_ROLE}) peuvent faire cette action!")
+            await ctx.send(f"seuls les admins ({self.settings.ADMIN_ROLE}) peuvent faire cette action!")
             return
 
-        if not nom_de_lequipe.startswith(utils_cog.settings.TEAM_PREFIX):
+        if not nom_de_lequipe.startswith(self.settings.TEAM_PREFIX):
             await message.add_reaction(reactions.FAILURE)
-            await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
+            await ctx.send(f"Le nom d'équipe doit commencer par '{self.settings.TEAM_PREFIX}' !")
             return
 
         serv_roles = await server.fetch_roles()
@@ -175,7 +169,7 @@ class TeamCog(BaseCog):
         }
 
         for r in serv_roles:
-            if r.name.lower() in [utils_cog.settings.ADMIN_ROLE, 'benevoles', 'bénévoles', 'coach']:
+            if r.name.lower() in [self.settings.ADMIN_ROLE, 'benevoles', 'bénévoles', 'coach']:
                 overwrites[r] = discord.PermissionOverwrite(read_messages=True)
 
         # team_cat = await server.create_category(f'PARTICIPANTS',
@@ -185,13 +179,13 @@ class TeamCog(BaseCog):
         team_cat = None
 
         for cat in server.categories:
-            if cat.name == utils_cog.settings.PARTICIPANT_ROLE:
+            if cat.name == self.settings.PARTICIPANT_ROLE:
                 team_cat = cat
                 break
 
         if team_cat is None:
             await message.add_reaction(reactions.FAILURE)
-            await ctx.send(f"Erreur! Catégorie '{utils_cog.settings.PARTICIPANT_ROLE}' introuvable")
+            await ctx.send(f"Erreur! Catégorie '{self.settings.PARTICIPANT_ROLE}' introuvable")
             return
 
         text: discord.TextChannel = await team_cat.create_text_channel(nom_de_lequipe)
@@ -231,29 +225,26 @@ class TeamCog(BaseCog):
         """
         Rajouter un coach à une équipe.
         """
-
-        utils_cog = self.bot.get_cog('UtilsCog')
-
         message = ctx.message
         author = ctx.author
         role_names = [r.name for r in author.roles]
         member_role_names = [r.name for r in member.roles]
 
-        if (utils_cog.settings.ADMIN_ROLE not in role_names) and (
-                utils_cog.settings.SUPER_COACH_ROLE not in role_names):
+        if (self.settings.ADMIN_ROLE not in role_names) and (
+                self.settings.SUPER_COACH_ROLE not in role_names):
             await message.add_reaction(reactions.FAILURE)
             await ctx.send(
-                f"Seuls les admins ({utils_cog.settings.ADMIN_ROLE}) et les Super Coach ({utils_cog.settings.SUPER_COACH_ROLE}) peuvent faire cette action!")
+                f"Seuls les admins ({self.settings.ADMIN_ROLE}) et les Super Coach ({self.settings.SUPER_COACH_ROLE}) peuvent faire cette action!")
             return
 
-        if not nom_de_lequipe.name.startswith(utils_cog.settings.TEAM_PREFIX):
+        if not nom_de_lequipe.name.startswith(self.settings.TEAM_PREFIX):
             await message.add_reaction(reactions.FAILURE)
-            await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
+            await ctx.send(f"Le nom d'équipe doit commencer par '{self.settings.TEAM_PREFIX}' !")
             return
 
-        if (utils_cog.settings.COACH_ROLE not in member_role_names) and (
-                utils_cog.settings.SUPER_COACH_ROLE not in member_role_names) and (
-                utils_cog.settings.FACILITATEUR_ROLE not in member_role_names):
+        if (self.settings.COACH_ROLE not in member_role_names) and (
+                self.settings.SUPER_COACH_ROLE not in member_role_names) and (
+                self.settings.FACILITATEUR_ROLE not in member_role_names):
             await message.add_reaction(reactions.FAILURE)
             await ctx.send(
                 f"Seuls les coachs, les Super Coach et les facilitateurs peuvent se faire ajouter à des équipe !")
@@ -268,29 +259,26 @@ class TeamCog(BaseCog):
         """
         Enlever un coach d'une équipe.
         """
-
-        utils_cog = self.bot.get_cog('UtilsCog')
-
         message = ctx.message
         author = ctx.author
         role_names = [r.name for r in author.roles]
         member_role_names = [r.name for r in member.roles]
 
-        if (utils_cog.settings.ADMIN_ROLE not in role_names) and (
-                utils_cog.settings.SUPER_COACH_ROLE not in role_names):
+        if (self.settings.ADMIN_ROLE not in role_names) and (
+                self.settings.SUPER_COACH_ROLE not in role_names):
             await message.add_reaction(reactions.FAILURE)
             await ctx.send(
-                f"Seuls les Admins ({utils_cog.settings.ADMIN_ROLE}) et les Super Coach ({utils_cog.settings.SUPER_COACH_ROLE}) peuvent faire cette action!")
+                f"Seuls les Admins ({self.settings.ADMIN_ROLE}) et les Super Coach ({self.settings.SUPER_COACH_ROLE}) peuvent faire cette action!")
             return
 
-        if not nom_de_lequipe.name.startswith(utils_cog.settings.TEAM_PREFIX):
+        if not nom_de_lequipe.name.startswith(self.settings.TEAM_PREFIX):
             await message.add_reaction(reactions.FAILURE)
-            await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
+            await ctx.send(f"Le nom d'équipe doit commencer par '{self.settings.TEAM_PREFIX}' !")
             return
 
-        if (utils_cog.settings.COACH_ROLE not in member_role_names) and (
-                utils_cog.settings.SUPER_COACH_ROLE not in member_role_names) and (
-                utils_cog.settings.FACILITATEUR_ROLE not in member_role_names):
+        if (self.settings.COACH_ROLE not in member_role_names) and (
+                self.settings.SUPER_COACH_ROLE not in member_role_names) and (
+                self.settings.FACILITATEUR_ROLE not in member_role_names):
             await message.add_reaction(reactions.FAILURE)
             await ctx.send(
                 f"Seuls les coachs, les Super Coach et les facilitateurs peuvent se faire retirer à des équipe !")
