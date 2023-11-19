@@ -28,9 +28,9 @@ class AdminCog(BaseCog):
 
         author = ctx.message.author
         role_names = [r.name for r in author.roles]
-        log.info('checking if user is admin', user=author.name, admin_role=self.utils_cog.settings.ADMIN_ROLE)
+        log.info('checking if user is admin', user=author.name, admin_role=self.settings.ADMIN_ROLE)
 
-        is_admin = self.utils_cog.settings.ADMIN_ROLE in role_names
+        is_admin = self.settings.ADMIN_ROLE in role_names
 
         log.info('roles', roles=role_names, is_admin=is_admin)
 

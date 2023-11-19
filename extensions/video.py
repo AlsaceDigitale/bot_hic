@@ -1,7 +1,8 @@
 import re
 import typing
-import discord
 import urllib.request
+
+import discord
 from discord.ext import commands
 
 from extensions.base_cog import BaseCog

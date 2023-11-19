@@ -6,6 +6,7 @@ from discord.ext import commands
 from discord.ext.commands import Cog
 
 from . import perms
+from .settings import Settings
 
 
 class BaseCog(commands.Cog):
@@ -14,8 +15,10 @@ class BaseCog(commands.Cog):
         self.bot = bot
         self.utils_cog: "Optional[UtilsCog]" = None
         self.guid: Optional[Guild] = None
+        self.settings: Settings = None
 
 
     async def cog_load(self):
         self.utils_cog = self.bot.get_cog('UtilsCog')
-        self.guild = self.utils_cog.settings.guild
+        self.settings = self.utils_cog.settings
+        self.guild = self.settings.guild

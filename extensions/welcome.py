@@ -1,6 +1,6 @@
 import discord
-from discord.errors import Forbidden
 import requests
+from discord.errors import Forbidden
 from discord.ext import tasks, commands
 
 from extensions.base_cog import BaseCog
@@ -24,7 +24,7 @@ class WelcomeCog(BaseCog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        attendees = requests.get(f"{self.utils_cog.settings.URL_API}/api/attendees/").json()
+        attendees = requests.get(f"{self.settings.URL_API}/api/attendees/").json()
 
         found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id), None)
 
@@ -39,14 +39,14 @@ class WelcomeCog(BaseCog):
         if role not in member.roles:
             await member.add_roles(role)
             await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
-            await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du {self.utils_cog.EVENT_NAME} !")
+            await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !")
 
     @tasks.loop(minutes=5.0)
     async def checkAttendeesTask(self):
         await self.checkAttendees()
 
     async def checkAttendees(self):
-        attendees = requests.get(f"{self.utils_cog.settings.URL_API}/api/attendees/").json()
+        attendees = requests.get(f"{self.settings.URL_API}/api/attendees/").json()
 
         async for member in self.guild.fetch_members(limit=None):
             found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id), None)
@@ -61,7 +61,7 @@ class WelcomeCog(BaseCog):
 
             if role not in member.roles:
                 await member.add_roles(role)
-                await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du {self.utils_cog.EVENT_NAME} !")
+                await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !")
                 
                 try:
                     await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
@@ -75,7 +75,7 @@ class WelcomeCog(BaseCog):
 
     @commands.command(name='changeNicks')
     async def changeNicks(self, ctx):
-        attendees = requests.get(self.utils_cog.settings.URL_API_ATTENDEES).json()
+        attendees = requests.get(self.settings.URL_API_ATTENDEES).json()
 
         async for member in self.guild.fetch_members(limit=None):
             found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id), None)

@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+
 from . import perms
 from .base_cog import BaseCog
 
@@ -25,7 +26,7 @@ class WorkAdventuresCog(BaseCog):
 
         self.welcome_cog = self.bot.get_cog('WelcomeCog')
 
-        self.channel_help = discord.utils.find(lambda c: c.name == 'demandes-aide', self.guild.channels)
+        self.channel_help = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_HELP, self.guild.channels)
         self.channel_bdd_workadventures = discord.utils.find(lambda c: c.name == 'workadventures', self.guild.channels)
 
         await self.loadUsersWorkAdventures()

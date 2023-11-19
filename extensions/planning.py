@@ -6,6 +6,7 @@ import requests
 from discord.ext import commands
 from pdfminer.high_level import extract_text
 
+from extensions import reactions
 from extensions.base_cog import BaseCog
 
 
@@ -33,10 +34,10 @@ class PlanningCog(BaseCog):
             dm_channel = await member.create_dm()
 
         embed = discord.Embed()
-        embed.add_field(name="Lien", value=self.PLANNING_URL)
-        embed.set_thumbnail(url='https://www.hackingindustry.camp/images/logos/Logo_HIC_White.png')
+        embed.add_field(name="Lien", value=self.settings.EVENT_PLANNING_URL)
+        embed.set_thumbnail(url=self.settings.EVENT_ICON_URL)
 
-        req = requests.get(self.PLANNING_URL, allow_redirects=True)
+        req = requests.get(self.settings.EVENT_PLANNING_URL, allow_redirects=True)
         bio = BytesIO(req.content)
         pdf = extract_text(bio)   
 
@@ -84,7 +85,7 @@ class PlanningCog(BaseCog):
             embed.add_field(name=field_name,value=msg)
             
         await dm_channel.send(embed=embed)
-        await ctx.message.add_reaction('\U0001F9BE')
+        await ctx.message.add_reaction(reactions.SUCCESS)
 
 def setup(bot):
     bot.add_cog(PlanningCog(bot))

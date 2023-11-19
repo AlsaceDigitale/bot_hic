@@ -1,17 +1,14 @@
 import asyncio
-
-import discord
-from discord import errors
-from discord.enums import ChannelType
-from discord.ext import commands
-import structlog
+import os
+import traceback
 from datetime import datetime
 
-import os
+import discord
+import structlog
+from discord.enums import ChannelType
+from discord.ext import commands
 
 from . import settings, perms
-
-import traceback
 
 log = structlog.get_logger()
 
@@ -43,6 +40,7 @@ class UtilsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         print(error)
+
     async def cog_load(self):
         await self.settings.cog_load()
         log.debug('utils: ready')
@@ -59,14 +57,15 @@ class UtilsCog(commands.Cog):
     @commands.command(name='show_settings')
     @commands.check(perms.is_support_user)
     async def show_settings(self, ctx):
-        await ctx.reply("Settings")
-        await ctx.reply("-------")
-        await ctx.reply(self.settings.as_string())
+        answer = "Settings\n"
+        answer += "-------\n"
+        answer += self.settings.as_string()
+        await ctx.reply(answer)
 
     @commands.command(name='show_categories')
     @commands.check(perms.is_support_user)
     async def show_categories(self, ctx):
-        ctx.reply('\n'.join(cat.name for cat in self.settings.guild.categories))
+        await ctx.reply('\n'.join(cat.name for cat in self.settings.guild.categories))
 
     @commands.command(name='purge')
     @commands.check(perms.is_support_user)

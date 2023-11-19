@@ -1,6 +1,8 @@
 import re
+
 import discord
 from discord.ext import commands
+
 from . import perms
 from .base_cog import BaseCog
 
@@ -28,8 +30,8 @@ class WelcomeCog(BaseCog):
     async def cog_load(self):
         await super().cog_load()
 
-        self.channel_welcome = discord.utils.find(lambda c: c.name == 'bienvenue', self.guild.channels)
-        self.channel_help = discord.utils.find(lambda c: c.name == 'demandes-aide', self.guild.channels)
+        self.channel_welcome = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_WELCOME, self.guild.channels)
+        self.channel_help = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_HELP, self.guild.channels)
         self.channel_bdd_users = discord.utils.find(lambda c: c.name == 'users', self.guild.channels)
         self.channel_bdd_users_link = discord.utils.find(lambda c: c.name == 'users_link', self.guild.channels)
 
@@ -73,7 +75,7 @@ class WelcomeCog(BaseCog):
         if dm_channel is None:
             dm_channel = await member.create_dm()
 
-        if self.utils_cog.settings.WELCOME_MODE == 'open':
+        if self.settings.WELCOME_MODE == 'open':
             msg = (
                 f"Bonjour {member.mention} vous débarquez ici, on dirait !\n"
                 f"Je suis {self.bot.user.mention}, je suis un gentil robot et je vais vous accompagner\n"
@@ -81,11 +83,11 @@ class WelcomeCog(BaseCog):
             )
 
             await dm_channel.send(msg)
-        elif self.utils_cog.settings.WELCOME_MODE == 'close':
+        elif self.settings.WELCOME_MODE == 'close':
             msg = (
                 f"Bonjour {member.mention} vous débarquez ici, on dirait !\n"
-                f"Je suis {self.bot.user.mention}, je suis le gentil robot du {self.utils_cog.EVENT_NAME}\n\n"
-                f"L'évenement n'a pas encore débuté ! Je reviendrai vers vous lors du lancement du {self.utils_cog.EVENT_NAME}."
+                f"Je suis {self.bot.user.mention}, je suis le gentil robot du {self.settings.EVENT_NAME}\n\n"
+                f"L'évenement n'a pas encore débuté ! Je reviendrai vers vous lors du lancement du {self.settings.EVENT_NAME}."
             )
         
             await dm_channel.send(msg)
@@ -103,13 +105,13 @@ class WelcomeCog(BaseCog):
             member = self.guild.get_member(author.id)
 
             if member is None:
-                await channel.send(f"Vous n'êtes pas présent sur le serveur « {self.utils_cog.SERVER_NAME} » !")
+                await channel.send(f"Vous n'êtes pas présent sur le serveur « {self.settings.SERVER_NAME} » !")
                 return
 
             if len(member.roles) <= 1:
                 content = message.content.strip()
 
-                if self.utils_cog.settings.WELCOME_MODE == 'open':
+                if self.settings.WELCOME_MODE == 'open':
                     if not re.search('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', content):
                         await channel.send("Je n'ai pas compris votre message :'(\nMerci de m'envoyer l'adresse email saisie lors de votre inscription au HIC.")
                         return
@@ -136,12 +138,12 @@ class WelcomeCog(BaseCog):
                         f"Vous pouvez me demander de l’aide à tout moment en tapant !aide"
                     ))
 
-                    await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du {self.utils_cog.EVENT_NAME} !")
+                    await self.channel_welcome.send(f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !")
                     await self.channel_bdd_users_link.send(f"{member.mention},{user['mail']}")
-                elif self.utils_cog.settings.WELCOME_MODE == 'close':
+                elif self.settings.WELCOME_MODE == 'close':
                     await channel.send((
                         f"Bonjour,\n"
-                        f"Je ne suis pas en mesure de vous répondre avant le lancement du {self.utils_cog.EVENT_NAME} :'(\n"
+                        f"Je ne suis pas en mesure de vous répondre avant le lancement du {self.settings.EVENT_NAME} :'(\n"
                         f"Je reviendrai vers vous lors du lancement !"
                     ))
     
@@ -170,7 +172,7 @@ class WelcomeCog(BaseCog):
         Envoie un message à toutes les personnes qui n'ont pas de grade
         """
 
-        if self.utils_cog.settings.WELCOME_MODE == 'close':
+        if self.settings.WELCOME_MODE == 'close':
             await ctx.send(f"Le mode Welcome est fermé !")
             return
 

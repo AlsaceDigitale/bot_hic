@@ -20,7 +20,7 @@ class AutoMessageCog(BaseCog):
 
     async def cog_load(self):
         await super().cog_load()
-        self.channel_msg_auto = discord.utils.find(lambda c: c.name == 'msg_auto', self.guild.channels)
+        self.channel_msg_auto = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_MSG_AUTO , self.guild.channels)
         
         await self.loadMessagesAuto()
         self.send_msg_auto.start()

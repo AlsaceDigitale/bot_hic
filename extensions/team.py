@@ -2,7 +2,7 @@ import discord
 import requests
 import structlog
 from discord.ext import commands
-from . import perms
+from . import perms, reactions
 from .base_cog import BaseCog
 
 log = structlog.get_logger()
@@ -16,7 +16,7 @@ class TeamCog(BaseCog):
     utils_cog = None
 
     role_chef = None
-    category_particpants = None
+    category_participants = None
 
     def __init__(self, bot):
         super().__init__(bot)
@@ -24,8 +24,8 @@ class TeamCog(BaseCog):
     async def cog_load(self):
         await super().cog_load()
 
-        self.role_chef = discord.utils.find(lambda c: c.name == 'Chef de Projet', self.guild.roles)
-        self.category_particpants = discord.utils.find(lambda c: c.name == 'Participants', self.guild.categories)
+        self.role_chef = discord.utils.find(lambda c: c.name == self.settings.PROJECT_LEAD_ROLE, self.guild.roles)
+        self.category_participants = discord.utils.find(lambda c: c.name == self.settings.PARTICIPANT_ROLE, self.guild.categories)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -34,15 +34,15 @@ class TeamCog(BaseCog):
         if ctx.command:
             if ctx.command.name == 'teamadd':
                 if isinstance(error, commands.BadArgument) or (isinstance(error, commands.MissingRequiredArgument)):
-                    await message.add_reaction('\U0001F44E')
+                    await message.add_reaction(reactions.FAILURE)
                     await ctx.send("Erreur! La commande est du type `!teamadd nom_de_lequipe membre1 [membreX...]`")
             elif ctx.command.name == 'teamremove':
                 if isinstance(error, commands.BadArgument) or (isinstance(error, commands.MissingRequiredArgument)):
-                    await message.add_reaction('\U0001F44E')
+                    await message.add_reaction(reactions.FAILURE)
                     await ctx.send("Erreur! La commande est du type `!teamremove nom_de_lequipe membre1 [membreX...]`")
             elif ctx.command.name == 'teamup':
                 if isinstance(error, commands.BadArgument) or (isinstance(error, commands.MissingRequiredArgument)):
-                    await message.add_reaction('\U0001F44E')
+                    await message.add_reaction(reactions.FAILURE)
                     await ctx.send(
                         "Erreur! La commande est du type `!teamup nom_de_lequipe chef_de_projet membre1 [membreX...]`")
         else:
@@ -61,19 +61,20 @@ class TeamCog(BaseCog):
         author = ctx.author
         role_names = [r.name for r in author.roles]
 
-        if utils_cog.settings.ADMIN_ROLE not in role_names:
-            await message.add_reaction('\U0001F44E')
+        if self.settings.ADMIN_ROLE not in role_names:
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(f"seuls les admins ({utils_cog.settings.ADMIN_ROLE}) peuvent faire cette action!")
             return
 
         if not nom_de_lequipe.name.startswith(utils_cog.settings.TEAM_PREFIX):
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
             return
 
         for member in members:
             await member.add_roles(nom_de_lequipe)
-            await ctx.message.add_reaction('\U0001F9BE')
+
+        await ctx.message.add_reaction(reactions.SUCCESS)
 
     @commands.command(name='teamremove')
     @commands.check(perms.is_support_user)
@@ -89,18 +90,18 @@ class TeamCog(BaseCog):
         role_names = [r.name for r in author.roles]
 
         if utils_cog.settings.ADMIN_ROLE not in role_names:
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(f"seuls les admins ({utils_cog.settings.ADMIN_ROLE}) peuvent faire cette action!")
             return
 
         if not nom_de_lequipe.name.startswith(utils_cog.settings.TEAM_PREFIX):
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
             return
 
         for member in members:
             await member.remove_roles(nom_de_lequipe)
-            await ctx.message.add_reaction('\U0001F9BE')
+            await ctx.message.add_reaction(reactions.SUCCESS)
 
     @commands.command(name='teamup')
     @commands.check(perms.is_support_user)
@@ -118,36 +119,37 @@ class TeamCog(BaseCog):
         role_names = [r.name for r in author.roles]
 
         if utils_cog.settings.ADMIN_ROLE not in role_names:
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(f"seuls les admins ({utils_cog.settings.ADMIN_ROLE}) peuvent faire cette action!")
             return
 
         if not nom_de_lequipe.startswith(utils_cog.settings.TEAM_PREFIX):
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
             return
 
         serv_roles = await server.fetch_roles()
 
         teamrole: discord.Role = None
+        cdp_role: discord.Role = None
 
         if nom_de_lequipe not in [r.name for r in serv_roles]:
             teamrole = await server.create_role(name=nom_de_lequipe,
                                                 mentionable=True,
                                                 reason="admin through bot")
         else:
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(f"L'{nom_de_lequipe} existe déjà. Utilisez `!teamadd` pour rajouter des membres.")
             return
 
         # check if chefdeproj role already exists. If not, creates it.
-        if 'chefdeproj' not in [r.name for r in serv_roles]:
-            cdp_role = await server.create_role(name='chefdeproj',
+        if self.settings.PROJECT_LEAD_ROLE not in [r.name for r in serv_roles]:
+            cdp_role = await server.create_role(name=self.settings.PROJECT_LEAD_ROLE,
                                                 mentionable=True,
                                                 reason="admin through bot")
         else:
             for r in serv_roles:
-                if r.name == 'chefdeproj':
+                if r.name == self.settings.PROJECT_LEAD_ROLE:
                     cdp_role = r
                     break
 
@@ -158,12 +160,12 @@ class TeamCog(BaseCog):
         for member in members:
             await member.add_roles(teamrole)
 
-        await message.add_reaction('\U0001F9BE')
+        await message.add_reaction(reactions.SUCCESS)
 
         msg = (f"Tout le monde a été rajouté dans l'{teamrole.name}, et "
                f"{chef_de_projet.name} "
                f"a été rajouté aux {cdp_role.name}.\n"
-               " il ne manque plus qu'un salon!")
+               f"il ne manque plus qu'un salon!")
 
         await ctx.send(msg)
 
@@ -188,7 +190,7 @@ class TeamCog(BaseCog):
                 break
 
         if team_cat is None:
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(f"Erreur! Catégorie '{utils_cog.settings.PARTICIPANT_ROLE}' introuvable")
             return
 
@@ -239,26 +241,26 @@ class TeamCog(BaseCog):
 
         if (utils_cog.settings.ADMIN_ROLE not in role_names) and (
                 utils_cog.settings.SUPER_COACH_ROLE not in role_names):
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(
                 f"Seuls les admins ({utils_cog.settings.ADMIN_ROLE}) et les Super Coach ({utils_cog.settings.SUPER_COACH_ROLE}) peuvent faire cette action!")
             return
 
         if not nom_de_lequipe.name.startswith(utils_cog.settings.TEAM_PREFIX):
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
             return
 
         if (utils_cog.settings.COACH_ROLE not in member_role_names) and (
                 utils_cog.settings.SUPER_COACH_ROLE not in member_role_names) and (
                 utils_cog.settings.FACILITATEUR_ROLE not in member_role_names):
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(
                 f"Seuls les coachs, les Super Coach et les facilitateurs peuvent se faire ajouter à des équipe !")
             return
 
         await member.add_roles(nom_de_lequipe)
-        await ctx.message.add_reaction('\U0001F9BE')
+        await ctx.message.add_reaction(reactions.SUCCESS)
 
     @commands.command(name='teamcoachremove')
     @commands.check(perms.is_support_or_supercoach_user)
@@ -276,36 +278,36 @@ class TeamCog(BaseCog):
 
         if (utils_cog.settings.ADMIN_ROLE not in role_names) and (
                 utils_cog.settings.SUPER_COACH_ROLE not in role_names):
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(
                 f"Seuls les Admins ({utils_cog.settings.ADMIN_ROLE}) et les Super Coach ({utils_cog.settings.SUPER_COACH_ROLE}) peuvent faire cette action!")
             return
 
         if not nom_de_lequipe.name.startswith(utils_cog.settings.TEAM_PREFIX):
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(f"Le nom d'équipe doit commencer par '{utils_cog.settings.TEAM_PREFIX}' !")
             return
 
         if (utils_cog.settings.COACH_ROLE not in member_role_names) and (
                 utils_cog.settings.SUPER_COACH_ROLE not in member_role_names) and (
                 utils_cog.settings.FACILITATEUR_ROLE not in member_role_names):
-            await message.add_reaction('\U0001F44E')
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send(
                 f"Seuls les coachs, les Super Coach et les facilitateurs peuvent se faire retirer à des équipe !")
             return
 
         await member.remove_roles(nom_de_lequipe)
-        await ctx.message.add_reaction('\U0001F9BE')
+        await ctx.message.add_reaction(reactions.SUCCESS)
 
     @commands.command(name='teamapi')
     async def teamapi(self, ctx):
-        project_teams = requests.get(f"{self.utils_cog.settings.URL_API}/api/project-teams/").json()
+        project_teams = requests.get(f"{self.settings.URL_API}/api/project-teams/").json()
 
         for project_team in project_teams:
-            if project_team['event'] != "hic-2021":
+            if project_team['event'] != self.settings.EVENT_CODE:
                 continue
 
-            name_team = f"{self.utils_cog.settings.TEAM_PREFIX}{project_team['number']}"
+            name_team = f"{self.settings.TEAM_PREFIX}{project_team['number']}"
 
             role_team = discord.utils.find(lambda r: r.name == name_team, self.guild.roles)
 
@@ -313,10 +315,10 @@ class TeamCog(BaseCog):
                 role_team = await ctx.guild.create_role(name=name_team, mentionable=True)
 
             text_channel_team = discord.utils.find(lambda r: r.name.lower() == name_team.lower(),
-                                                   self.category_particpants.text_channels)
+                                                   self.category_participants.text_channels)
 
             if text_channel_team is None:
-                text_channel_team = await self.category_particpants.create_text_channel(name_team)
+                text_channel_team = await self.category_participants.create_text_channel(name_team)
 
                 perms = text_channel_team.overwrites_for(role_team)
                 perms.send_messages = True
@@ -324,10 +326,10 @@ class TeamCog(BaseCog):
                 await text_channel_team.set_permissions(role_team, overwrite=perms)
 
             voice_channel_team = discord.utils.find(lambda r: r.name.lower() == name_team.lower(),
-                                                    self.category_particpants.voice_channels)
+                                                    self.category_participants.voice_channels)
 
             if voice_channel_team is None:
-                voice_channel_team = await self.category_particpants.create_voice_channel(name_team.lower())
+                voice_channel_team = await self.category_participants.create_voice_channel(name_team.lower())
 
                 perms = voice_channel_team.overwrites_for(role_team)
                 perms.view_channel = True

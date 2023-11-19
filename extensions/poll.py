@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from . import perms
+from . import perms, reactions
 from .base_cog import BaseCog
 
 
@@ -19,7 +19,7 @@ class PollCog(BaseCog):
     async def cog_load(self):
         await super().cog_load()
 
-        self.voting_channel = discord.utils.find(lambda c: c.name == self.utils_cog.settings.CHANNEL_VOTE, self.guild.channels)
+        self.voting_channel = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_VOTE, self.guild.channels)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -28,19 +28,19 @@ class PollCog(BaseCog):
         if ctx.command:
             if ctx.command.name == 'new_poll':
                 if isinstance(error, commands.BadArgument) or isinstance(error, commands.MissingRequiredArgument):
-                    await message.add_reaction('\U0001F44E')
+                    await message.add_reaction(reactions.FAILURE)
                     await ctx.send("Erreur! La commande est du type `!new_poll \"question\" nombre_max_de_vote \"opt1\" \"opt2\"...`")
             elif ctx.command.name == 'reset_poll':
                 if isinstance(error, commands.BadArgument) or isinstance(error, commands.MissingRequiredArgument):
-                    await message.add_reaction('\U0001F44E')
+                    await message.add_reaction(reactions.FAILURE)
                     await ctx.send("Erreur! La commande est du type `!reset_poll id`")
             elif ctx.command.name == 'destroy_poll':
                 if isinstance(error, commands.BadArgument) or isinstance(error, commands.MissingRequiredArgument):
-                    await message.add_reaction('\U0001F44E')
+                    await message.add_reaction(reactions.FAILURE)
                     await ctx.send("Erreur! La commande est du type `!destroy_poll id`")
             elif ctx.command.name == 'close_poll':
                 if isinstance(error, commands.BadArgument) or isinstance(error, commands.MissingRequiredArgument):
-                    await message.add_reaction('\U0001F44E')
+                    await message.add_reaction(reactions.FAILURE)
                     await ctx.send("Erreur! La commande est du type `!close_poll id`")
 
     @commands.command(name='new_poll')
@@ -56,8 +56,8 @@ class PollCog(BaseCog):
         author = ctx.author
         role_names = [r.name for  r in author.roles]
 
-        if self.utils_cog.settings.ADMIN_ROLE not in role_names:
-            await message.add_reaction('\U0001F44E')
+        if self.settings.ADMIN_ROLE not in role_names:
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send("seuls les admins peuvent faire cette action!")
             return
         if len(options) <= 1:
@@ -106,13 +106,13 @@ class PollCog(BaseCog):
         author = ctx.author
         role_names = [r.name for  r in author.roles]
 
-        if self.utils_cog.settings.PARTICIPANT_ROLE not in role_names:
+        if self.settings.PARTICIPANT_ROLE not in role_names:
             return
 
         print(role_names)
 
-        if self.utils_cog.settings.ADMIN_ROLE not in role_names:
-            await message.add_reaction('\U0001F44E')
+        if self.settings.ADMIN_ROLE not in role_names:
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send("seuls les admins peuvent faire cette action!")
             return
         
@@ -144,8 +144,8 @@ class PollCog(BaseCog):
 
         print(role_names)
 
-        if self.utils_cog.settings.ADMIN_ROLE not in role_names:
-            await message.add_reaction('\U0001F44E')
+        if self.settings.ADMIN_ROLE not in role_names:
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send("seuls les admins peuvent faire cette action!")
             return
 
@@ -166,8 +166,8 @@ class PollCog(BaseCog):
 
         print(role_names)
 
-        if self.utils_cog.settings.ADMIN_ROLE not in role_names:
-            await message.add_reaction('\U0001F44E')
+        if self.settings.ADMIN_ROLE not in role_names:
+            await message.add_reaction(reactions.FAILURE)
             await ctx.send("seuls les admins peuvent faire cette action!")
             return
 
@@ -212,7 +212,7 @@ class PollCog(BaseCog):
             return
 
         role_names = [r.name for  r in user.roles]
-        if self.utils_cog.settings.PARTICIPANT_ROLE not in role_names:
+        if self.settings.PARTICIPANT_ROLE not in role_names:
             await reaction.remove(user)
             await dm_channel.send(f'<@!{user.id}> n\'a pas le droit de vote')
             return
