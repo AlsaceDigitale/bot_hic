@@ -1,8 +1,11 @@
 import discord
+import structlog
 from discord.ext import commands
 
 from . import perms, reactions
 from .base_cog import BaseCog
+
+log = structlog.get_logger()
 
 
 class PollCog(BaseCog):
@@ -196,22 +199,24 @@ class PollCog(BaseCog):
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
-        if user.bot:
-            return
-
         message = reaction.message
         channel = message.channel
         emoji = reaction.emoji
+
+        if channel.id != self.voting_channel.id:
+            # reacts only on vote channel are processed
+            log.debug('ignoring reaction not related to vote')
+            return
+
+        if user.bot:
+            log.debug('ignoring bot reaction add')
+            return
 
         dm_channel = user.dm_channel
         if dm_channel is None:
             dm_channel = await user.create_dm()
 
         number_of_votes = 0
-
-        if channel.id != self.voting_channel.id:
-            # reacts only on vote channel are processed
-            return
 
         role_names = [r.name for r in user.roles]
         if self.settings.PARTICIPANT_ROLE not in role_names:
@@ -221,14 +226,17 @@ class PollCog(BaseCog):
 
         if message.author != self.bot.user:
             # chek whether bot actually posted the reacted message, otherwise ignores
+            log.debug("Ignored - It's not our vote", author=message.author.name)
             return
 
         if user == self.bot.user:
             # ignores if it is the bot voting
+            log.debug("Ignored - It's our reaction")
             return
 
         if (emoji not in self.REACTIONS_YESNO) and (emoji not in self.REACTIONS_MULTI):
             # only vote reactions are accepted
+            log.info('Removing unauthorized reaction', emoji=emoji, user=user.name)
             await reaction.remove(user)
             return
 
@@ -242,10 +250,13 @@ class PollCog(BaseCog):
                     return
                 break
         else:
+            log.debug('Ignoring - No embeds')
             return
 
+        log.info('Counted maxvotes', maxvotes=maxvotes)
+
         for r in message.reactions:
-            users = await r.users().flatten()
+            users = [user async for user in r.users()]
 
             if user in users:
                 number_of_votes += 1
@@ -254,6 +265,8 @@ class PollCog(BaseCog):
                     await reaction.remove(user)
                     await dm_channel.send(
                         f'<@!{user.id}> ne peut plus voter à "{title}", c\'est son vote n°{number_of_votes}/{maxvotes}')
+                    log.info('User has exceeded vote quota', user=user.name, number_of_votes=number_of_votes,
+                             maxvotes=maxvotes)
                     return
 
         await dm_channel.send(
