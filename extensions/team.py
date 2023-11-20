@@ -26,7 +26,7 @@ class TeamCog(BaseCog):
         await super().cog_load()
 
         self.role_chef = discord.utils.find(lambda c: c.name == self.settings.PROJECT_LEAD_ROLE, self.guild.roles)
-        self.category_participants = discord.utils.find(lambda c: c.name == self.settings.PARTICIPANT_ROLE,
+        self.category_participants = discord.utils.find(lambda c: c.name == self.settings.TEAM_CATEGORY,
                                                         self.guild.categories)
 
     @commands.Cog.listener()
@@ -279,13 +279,13 @@ class TeamCog(BaseCog):
         team_cat = None
 
         for cat in server.categories:
-            if cat.name == self.settings.PARTICIPANT_ROLE:
+            if cat.name == self.settings.TEAM_CATEGORY:
                 team_cat = cat
                 break
 
         if team_cat is None:
             await message.add_reaction(reactions.FAILURE)
-            await ctx.send(f"Erreur! Catégorie '{self.settings.PARTICIPANT_ROLE}' introuvable")
+            await ctx.send(f"Erreur! Catégorie '{self.settings.TEAM_CATEGORY}' introuvable")
             return
 
         text: discord.TextChannel = await team_cat.create_text_channel(nom_de_lequipe)
