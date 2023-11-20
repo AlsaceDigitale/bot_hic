@@ -13,3 +13,5 @@ python-dotenv = '0.15.0'
 structlog = "*"
 requests = "*"
 "pdfminer.six" = "*"
+marko = "*"
+mistletoe = "*"

@@ -33,7 +33,8 @@ async def on_ready():
         'extensions.team',
         'extensions.poll',
         'extensions.welcome',
-        'extensions.auto_message'
+        'extensions.auto_message',
+        'extensions.planning'
     ]
 
     for extension in EXTENSIONS:

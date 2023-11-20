@@ -1,13 +1,17 @@
+import os.path
 import typing
 from io import BytesIO
 
 import discord
 import requests
 from discord.ext import commands
-from pdfminer.high_level import extract_text
 
 from extensions import reactions
 from extensions.base_cog import BaseCog
+
+import marko
+
+from mistletoe import Document, HtmlRenderer
 
 
 class PlanningCog(BaseCog):
@@ -24,6 +28,55 @@ class PlanningCog(BaseCog):
         Commande: !planning ou !agenda
         Argument: [opt: vendredi|samedi|dimanche|semaine]
         
+        Donne le planning et le lien vers le PDF.
+        """
+        member = ctx.author
+        dm_channel = member.dm_channel
+
+        if dm_channel is None:
+            dm_channel = await member.create_dm()
+
+        embed = discord.Embed()
+        embed.add_field(name="Lien", value=self.settings.EVENT_PLANNING_URL)
+        embed.set_thumbnail(url=self.settings.EVENT_ICON_URL)
+
+        planning_filename = f'plannings/{self.settings.EVENT_CODE}.md'
+        if os.path.exists(planning_filename):
+            msg = open(planning_filename, 'r').read()
+
+            with HtmlRenderer() as renderer:  # or: `with HtmlRenderer(AnotherToken1, AnotherToken2) as renderer:`
+                doc = Document(msg)  # parse the lines into AST
+                rendered = renderer.render(doc)  # render the AST
+                embed.add_field(name="Planning", value=rendered)
+
+            # md = marko.Markdown()
+            #
+            # parser = md.parser
+            # renderer = md.renderer()
+            # doc = parser.parse(msg)
+            #
+            # block_title = None
+            # block_content = ""
+
+            # for block in doc.children:
+            #     if isinstance(block, marko.block.Heading):
+            #         if block.level == 2:
+            #             if block_title:
+            #                 embed.add_field(name=block_title, value=block_content)
+            #             block_title = renderer.render(block)
+            #             block_content = ""
+            #     else:
+            #         block_content += renderer.render(block) + "\n"
+
+        await dm_channel.send(embed=embed)
+        await ctx.message.add_reaction(reactions.SUCCESS)
+
+    # Old planning command that extracted the planning from the PDF
+    async def planning_from_pdf(self, ctx, period: typing.Optional[str] = None):
+        """
+        Commande: !planning ou !agenda
+        Argument: [opt: vendredi|samedi|dimanche|semaine]
+
         Donne le planning et le lien vers le PDF.
         """
         member = ctx.author
@@ -87,5 +140,5 @@ class PlanningCog(BaseCog):
         await ctx.message.add_reaction(reactions.SUCCESS)
 
 
-def setup(bot):
-    bot.add_cog(PlanningCog(bot))
+async def setup(bot):
+    await bot.add_cog(PlanningCog(bot))
