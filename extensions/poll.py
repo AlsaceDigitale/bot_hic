@@ -193,11 +193,15 @@ class PollCog(BaseCog):
         votes = {}
 
         for r in msg_react:
-            votes[r.emoji] = r.count - 1
-            description += f'{r.emoji}: {votes[r.emoji]}\n'
+            votes[r.emoji] = max(r.count - 1, 0)
             await r.clear()
 
         log.info('vote result', result=votes)
+
+        votes = {k: v for k, v in sorted(votes.items(), key=lambda item: item[1], reverse=True)}
+
+        for k, v in votes.items():
+            description += f'{k}: {v}\n'
 
         embed = discord.Embed(title=title, description=description)
 
