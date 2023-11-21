@@ -409,6 +409,7 @@ class TeamCog(BaseCog):
                 text_channel_team = await self.category_participants.create_text_channel(name_team)
 
                 perms = text_channel_team.overwrites_for(role_team)
+                perms.view_channel = True
                 perms.send_messages = True
 
                 await text_channel_team.set_permissions(role_team, overwrite=perms)
