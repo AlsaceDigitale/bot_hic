@@ -169,8 +169,6 @@ class PollCog(BaseCog):
         author = ctx.author
         role_names = [r.name for r in author.roles]
 
-        print(role_names)
-
         if self.settings.ADMIN_ROLE not in role_names:
             await message.add_reaction(reactions.FAILURE)
             await ctx.send("seuls les admins peuvent faire cette action!")
@@ -178,19 +176,28 @@ class PollCog(BaseCog):
 
         called_msg = await self.voting_channel.fetch_message(id)
 
+        description = ""
+        title = "Vote (terminé)"
+
         for e in called_msg.embeds:
             # check if it's a reaction to a vote
-            if ('Poll' in e.footer.text):
+            if 'Poll' in e.footer.text:
                 description = e.description
                 title = '~~' + e.title + '~~ (terminé)'
+                break
 
         description += '\n**Résultat final:**\n'
 
         msg_react = called_msg.reactions
 
+        votes = {}
+
         for r in msg_react:
-            description += f'{r.emoji}: {r.count}\n'
+            votes[r.emoji] = r.count - 1
+            description += f'{r.emoji}: {votes[r.emoji]}\n'
             await r.clear()
+
+        log.info('vote result', result=votes)
 
         embed = discord.Embed(title=title, description=description)
 
