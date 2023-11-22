@@ -186,7 +186,7 @@ class PollCog(BaseCog):
                 title = '~~' + e.title + '~~ (terminé)'
                 break
 
-        description += '\n**Résultat final:**\n'
+        description += '\n\n**Résultat final:**\n'
 
         msg_react = called_msg.reactions
 
