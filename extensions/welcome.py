@@ -1,9 +1,14 @@
+from typing import Optional
+
 import discord
 import requests
+import structlog
 from discord.errors import Forbidden
 from discord.ext import tasks, commands
 
-from extensions.base_cog import BaseCog
+from extensions.base_cog import BaseCog, progress_message
+
+log = structlog.get_logger()
 
 
 class WelcomeCog(BaseCog):
@@ -16,80 +21,90 @@ class WelcomeCog(BaseCog):
     async def cog_load(self):
         await super().cog_load()
 
-        self.channel_welcome = discord.utils.find(lambda c: c.name == 'bienvenue', self.guild.channels)
+        self.channel_welcome = self.settings.get_channel('WELCOME')
 
-        self.checkAttendeesTask.start()
+        self.check_attendees_task.start()
 
-    @commands.Cog.listener()
-    async def on_member_join(self, member):
-        attendees = requests.get(f"{self.settings.URL_API}/api/attendees/").json()
+    def _get_attendees_data(self):
+        return requests.get(f"{self.settings.URL_API}/api/attendees/").json()
+
+    async def welcome_member_helper(self, ctx, member: discord.Member, attendees_data=None):
+        attendees = attendees_data or self._get_attendees_data()
 
         found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id), None)
 
         if found_attendee is None:
+            log.warning('member not found in attendees list', member_id=member.id, member_name=member.name)
             return
 
-        role = discord.utils.find(lambda r: r.name.lower() == found_attendee['role'].lower(), self.guild.roles)
+        role: Optional[discord.Role] = None
+
+        if found_attendee['role']:
+            role = discord.utils.find(lambda r: r.name.lower() == found_attendee['role'].lower(),
+                                      self.guild.roles)
 
         if role is None:
-            return
+            log.warning('no role defined or found for member', member_name=member.name, member_id=member.id)
 
-        if role not in member.roles:
+        await self._rename_member(found_attendee, member)
+
+        if role and role not in member.roles:
+            log.info('adding role to member', role=role.name, member=member.name)
             await member.add_roles(role)
-            await member.edit(nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
             await self.channel_welcome.send(
                 f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !")
 
-    @tasks.loop(minutes=5.0)
-    async def checkAttendeesTask(self):
-        await self.checkAttendees()
-
-    async def checkAttendees(self):
-        attendees = requests.get(f"{self.settings.URL_API}/api/attendees/").json()
-
-        async for member in self.guild.fetch_members(limit=None):
-            found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id),
-                                  None)
-
-            if found_attendee is None:
-                continue
-
-            role = discord.utils.find(lambda r: r.name.lower() == found_attendee['role'].lower(), self.guild.roles)
-
-            if role is None:
-                continue
-
-            if role not in member.roles:
-                await member.add_roles(role)
-                await self.channel_welcome.send(
-                    f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !")
-
-                try:
-                    await member.edit(
-                        nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
-                except Forbidden:
-                    pass
-
-    @commands.command(name='checkAttendees')
-    async def checkAttendeesCommand(self, ctx):
-        await self.checkAttendees()
-
-    @commands.command(name='changeNicks')
-    async def changeNicks(self, ctx):
-        attendees = requests.get(self.settings.URL_API_ATTENDEES).json()
-
-        async for member in self.guild.fetch_members(limit=None):
-            found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id),
-                                  None)
-
-            if found_attendee is None:
-                continue
-
+    async def _rename_member(self, found_attendee, member):
+        new_nick = f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}"
+        if member.nick != new_nick:
             try:
-                await member.edit(
-                    nick=f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}.")
+                log.info('renaming member', first_name=found_attendee['first_name'],
+                         last_name=found_attendee['last_name'],
+                         new_nick=new_nick)
+                await member.edit(nick=new_nick)
             except Forbidden:
                 pass
+
+    @commands.command(name='welcome_member')
+    async def welcome_member(self, ctx, member: discord.Member):
+        async with progress_message(ctx, f'welcome_member {member.mention}'):
+            await self.welcome_member_helper(ctx, member)
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        await self.welcome_member_helper(None, member)
+
+    @tasks.loop(minutes=5.0)
+    async def check_attendees_task(self):
+        await self.check_attendees()
+
+    async def check_attendees(self):
+        attendees = self._get_attendees_data()
+
+        async for member in self.guild.fetch_members(limit=None):
+            found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id),
+                                  None)
+            await self.welcome_member_helper(None, member, attendees)
+
+    @commands.command(name='check_attendees')
+    async def check_attendees_command(self, ctx):
+        async with progress_message(ctx, 'check attendees'):
+            await self.check_attendees()
+
+    @commands.command(name='change_nicks')
+    async def change_nicks(self, ctx):
+        async with progress_message(ctx, 'changing nicks'):
+            attendees = self._get_attendees_data()
+
+            async for member in self.guild.fetch_members(limit=None):
+                found_attendee = next(
+                    (attendee for attendee in attendees if attendee["discord_unique_id"] == member.id),
+                    None)
+
+                if found_attendee is None:
+                    continue
+
+                await self._rename_member(found_attendee, member)
 
 
 async def setup(bot):
