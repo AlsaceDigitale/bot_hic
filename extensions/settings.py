@@ -34,6 +34,7 @@ class Settings:
         self.JURY_ROLE = os.getenv('BOT_JURY_ROLE', 'Jury')
         self.URL_API = os.getenv('BOT_URL_API', 'https://hic-manager-dev.osc-fr1.scalingo.io')
         self.SERVER_NAME = os.getenv('SERVER_NAME', 'Hacking Industry Camp')
+        self.SERVER_ID = int(os.getenv('SERVER_ID', '804784231732740106'))
         self.EVENT_NAME = os.getenv('EVENT_NAME', 'Hacking Industry Camp')
         self.EVENT_CODE = os.getenv('EVENT_CODE', 'hic-2021')
         self.EVENT_PLANNING_URL = os.getenv('EVENT_PLANNING_URL',
@@ -46,9 +47,12 @@ class Settings:
 
     async def cog_load(self):
         for guild in self.bot.guilds:
-            if guild.name.startswith(self.SERVER_NAME):
+            if guild.id == self.SERVER_ID:
                 self.guild = guild
                 break
+        else:
+            log.error('could not find our server', server_name=self.SERVER_NAME, server_id=self.SERVER_ID)
+
         log.debug('settings: ready')
 
     def as_string(self):
