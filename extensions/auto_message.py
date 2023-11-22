@@ -11,16 +11,16 @@ from extensions.base_cog import BaseCog
 class AutoMessageCog(BaseCog):
     messages = []
 
-    channel_msg_auto = None
+    @property
+    def channel_msg_auto(self):
+        return discord.utils.find(lambda c: c.name == self.settings.CHANNEL_MSG_AUTO,
+                                  self.guild.channels)
 
     def __init__(self, bot):
         super().__init__(bot)
-        self.channel_msg_auto = None
 
     async def cog_load(self):
         await super().cog_load()
-        self.channel_msg_auto = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_MSG_AUTO,
-                                                   self.guild.channels)
 
         await self.loadMessagesAuto()
         self.send_msg_auto.start()

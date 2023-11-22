@@ -18,12 +18,13 @@ class PollCog(BaseCog):
 
     def __init__(self, bot):
         super().__init__(bot)
-        self.voting_channel = None
+
+    @property
+    def voting_channel(self):
+        return discord.utils.find(lambda c: c.name == self.settings.CHANNEL_VOTE, self.guild.channels)
 
     async def cog_load(self):
         await super().cog_load()
-
-        self.voting_channel = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_VOTE, self.guild.channels)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
