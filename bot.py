@@ -25,7 +25,7 @@ bot = commands.Bot(command_prefix=BOT_PREFIX, case_insensitive=True, intents=int
 
 @bot.event
 async def on_ready():
-    log.info('We have logged in as {0.user}'.format(bot))
+    log.info('bot logged in', user=bot.user.name)
 
     EXTENSIONS = [
         'extensions.utils',
@@ -45,6 +45,7 @@ async def on_ready():
     # await bot.change_presence(activity=stream)
 
     await post_version_message()
+    log.info('bot ready')
 
 
 async def post_version_message():
