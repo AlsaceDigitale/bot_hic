@@ -29,7 +29,8 @@ class WelcomeCog(BaseCog):
         return requests.get(f"{self.settings.URL_API}/api/attendees/").json()
 
     async def welcome_member_helper(self, ctx, member: discord.Member, attendees_data=None, pedantic=True):
-        log.info('welcome member', member=member.name, member_id=member.id)
+        if pedantic:
+            log.info('welcome member', member=member.name, member_id=member.id)
         attendees = attendees_data or self._get_attendees_data()
 
         found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id), None)
