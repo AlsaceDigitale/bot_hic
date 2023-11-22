@@ -8,15 +8,17 @@ from extensions.base_cog import BaseCog
 class HelpCog(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
-        self.channel_help = None
-        self.channel_support = None
 
     async def cog_load(self):
         await super().cog_load()
 
-        self.channel_help = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_HELP, self.guild.channels)
-        self.channel_support = discord.utils.find(lambda c: c.name == self.settings.CHANNEL_SUPPORT,
-                                                  self.guild.channels)
+    @property
+    def channel_help(self) -> discord.TextChannel:
+        return self.settings.get_channel('HELP')
+
+    @property
+    def channel_support(self) -> discord.TextChannel:
+        return self.settings.get_channel('SUPPORT')
 
     @commands.command(name='aide')
     async def aide(self, ctx):
