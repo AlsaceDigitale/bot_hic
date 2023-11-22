@@ -261,7 +261,7 @@ class TeamCog(BaseCog):
             await ctx.send(f"Erreur! Catégorie '{self.settings.TEAM_CATEGORY}' introuvable")
             return
 
-        await self._create_channels_for_team(log_team, nom_de_lequipe, team_role)
+        text, voice = await self._create_channels_for_team(log_team, nom_de_lequipe, team_role)
 
         msg = (f"C'est bon! <@&{team_role.id}> vous pouvez vous rendre sur"
                f"<#{text.id}> et <#{voice.id}>.")
@@ -436,6 +436,8 @@ class TeamCog(BaseCog):
             await voice_channel_team.set_permissions(role_team, overwrite=perms)
         else:
             log_team.info('voice channel exists')
+
+        return text_channel_team, voice_channel_team
 
     async def _create_role_for_team(self, ctx, log_team, name_team):
         role_team = discord.utils.find(lambda r: r.name == name_team, self.guild.roles)
