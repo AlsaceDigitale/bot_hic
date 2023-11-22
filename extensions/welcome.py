@@ -12,16 +12,15 @@ log = structlog.get_logger()
 
 
 class WelcomeCog(BaseCog):
-    guild = None
-    channel_welcome = None
-
     def __init__(self, bot):
         super().__init__(bot)
 
+    @property
+    def channel_welcome(self) -> discord.TextChannel:
+        return self.settings.get_channel('WELCOME')
+
     async def cog_load(self):
         await super().cog_load()
-
-        self.channel_welcome = self.settings.get_channel('WELCOME')
 
         self.check_attendees_task.start()
 

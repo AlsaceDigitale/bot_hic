@@ -13,22 +13,21 @@ class TeamCog(BaseCog):
     Equipes
     """
 
-    guild = None
-    utils_cog = None
-
-    role_chef = None
-    category_participants = None
-
     def __init__(self, bot):
         super().__init__(bot)
 
-    async def cog_load(self):
-        await super().cog_load()
+    @property
+    def role_chef(self) -> discord.Role:
+        return discord.utils.find(lambda c: c.name == self.settings.PROJECT_LEAD_ROLE, self.guild.roles)
 
-        self.role_chef = discord.utils.find(lambda c: c.name == self.settings.PROJECT_LEAD_ROLE, self.guild.roles)
-        self.category_participants: discord.CategoryChannel = discord.utils.find(
+    @property
+    def category_participants(self):
+        return discord.utils.find(
             lambda c: c.name == self.settings.TEAM_CATEGORY,
             self.guild.categories)
+
+    async def cog_load(self):
+        await super().cog_load()
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):

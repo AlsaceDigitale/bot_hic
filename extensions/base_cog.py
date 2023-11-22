@@ -30,11 +30,18 @@ class BaseCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.utils_cog: "Optional[UtilsCog]" = None
-        self.guid: Optional[Guild] = None
-        self.settings: Settings = None
 
     async def cog_load(self):
-        self.utils_cog = self.bot.get_cog('UtilsCog')
-        self.settings = self.utils_cog.settings
-        self.guild = self.settings.guild
+        pass
+
+    @property
+    def utils_cog(self):
+        return self.bot.get_cog('UtilsCog')
+
+    @property
+    def settings(self) -> Settings:
+        return self.utils_cog.settings
+
+    @property
+    def guild(self) -> Optional[Guild]:
+        return self.settings.guild

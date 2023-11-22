@@ -9,7 +9,6 @@ from extensions.base_cog import BaseCog
 
 
 class AutoMessageCog(BaseCog):
-    guild = None
     messages = []
 
     channel_msg_auto = None
