@@ -1,7 +1,7 @@
 import os
 import discord
 import structlog
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
 from os.path import join, dirname
 from discord.ext import commands
 
@@ -20,7 +20,8 @@ BOT_PREFIX = os.getenv('BOT_PREFIX', '!')
 log.info('starting bot', prefix=BOT_PREFIX)
 
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix=BOT_PREFIX,  case_insensitive=True, intents=intents)
+bot = commands.Bot(command_prefix=BOT_PREFIX, case_insensitive=True, intents=intents)
+
 
 @bot.event
 async def on_ready():
@@ -40,18 +41,19 @@ async def on_ready():
         log.info('loading extension', name=extension)
         await bot.load_extension(extension)
 
-
     # stream = discord.Streaming(name='Hacking Industry Camp',url='https://www.twitch.tv/alsacedigitale')
     # await bot.change_presence(activity=stream)
-    
+
     await post_version_message()
 
+
 async def post_version_message():
-    SCALINGO_APP=os.getenv('APP')
-    SCALINGO_CONTAINER_VERSION=os.getenv('CONTAINER_VERSION')
+    SCALINGO_APP = os.getenv('APP')
+    SCALINGO_CONTAINER_VERSION = os.getenv('CONTAINER_VERSION')
 
     if SCALINGO_CONTAINER_VERSION and SCALINGO_APP:
         await bot_log_message(f"{SCALINGO_APP} a démarré en version {SCALINGO_CONTAINER_VERSION}")
+
 
 async def bot_log_message(*args, **kwargs):
     BOT_LOG_CHANNEL_ID = os.getenv('BOT_LOG_CHANNEL_ID')
@@ -60,7 +62,7 @@ async def bot_log_message(*args, **kwargs):
         if BOT_LOG_CHANNEL_ID:
             BOT_LOG_CHANNEL_ID = int(BOT_LOG_CHANNEL_ID)
             bot_log_channel = discord.utils.get(bot.get_all_channels(), id=BOT_LOG_CHANNEL_ID)
-            
+
             if bot_log_channel:
                 await bot_log_channel.send(*args, **kwargs)
             else:
@@ -68,6 +70,6 @@ async def bot_log_message(*args, **kwargs):
     except Exception as e:
         log.error('Could not post message to bot log channel', exc_info=e)
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     bot.run(TOKEN, reconnect=True, root_logger=structlog.get_logger())
