@@ -3,9 +3,12 @@ from datetime import datetime
 
 import discord
 import discord.state
+import structlog
 from discord.ext import tasks, commands
 
 from extensions.base_cog import BaseCog
+
+log = structlog.get_logger('auto_message')
 
 
 class AutoMessageCog(BaseCog):
@@ -43,77 +46,81 @@ class AutoMessageCog(BaseCog):
         self.messages = []
 
         async for message in self.channel_msg_auto.history(limit=None):
-            if len(message.reactions) > 0:
-                continue
-
-            content = message.content
-
-            if '\n-----\n' not in content:
-                print('Auto Message: Error 1')
-                await message.add_reaction('👎')
-                continue
-
-            headers_body = self.stripList(content.split('\n-----\n', 1))
-
-            if len(headers_body) != 2:
-                print('Auto Message: Error 2')
-                await message.add_reaction('👎')
-                continue
-
-            raw_headers, body = self.stripList(headers_body)
-
-            if len(body) < 1:
-                print('Auto Message: Error 3')
-                await message.add_reaction('👎')
-                continue
-
-            obj = dict({
-                'id': message.id,
-                'couleur': 2013674,
-                'body': body
-            })
-
-            for raw_header in raw_headers.split('\n'):
-                if ':' not in raw_header:
+            try:
+                if len(message.reactions) > 0:
                     continue
 
-                key, value = self.stripList(raw_header.split(':', 1))
+                content = message.content
 
-                if key == '' or value == '':
+                if '\n-----\n' not in content:
+                    log.error('Auto Message: Error 1')
+                    await message.add_reaction('👎')
                     continue
 
-                if key == 'Date':
-                    obj['date'] = datetime.strptime(value, '%d/%m/%Y %H:%M')
-                elif key == 'Salons':
-                    if ' ' in value:
-                        obj['salons'] = list(map(lambda s: int(s[2:-1].strip()), value.split(' ')))
+                headers_body = self.stripList(content.split('\n-----\n', 1))
+
+                if len(headers_body) != 2:
+                    log.error('Auto Message: Error 2')
+                    await message.add_reaction('👎')
+                    continue
+
+                raw_headers, body = self.stripList(headers_body)
+
+                if len(body) < 1:
+                    log.error('Auto Message: Error 3')
+                    await message.add_reaction('👎')
+                    continue
+
+                obj = dict({
+                    'id': message.id,
+                    'couleur': 2013674,
+                    'body': body
+                })
+
+                for raw_header in raw_headers.split('\n'):
+                    if ':' not in raw_header:
+                        continue
+
+                    key, value = self.stripList(raw_header.split(':', 1))
+
+                    if key == '' or value == '':
+                        continue
+
+                    if key == 'Date':
+                        obj['date'] = datetime.strptime(value, '%d/%m/%Y %H:%M')
+                    elif key == 'Salons':
+                        if ' ' in value:
+                            obj['salons'] = list(map(lambda s: int(s[2:-1].strip()), value.split(' ')))
+                        else:
+                            obj[key.lower()] = [int(value[2:-1])]
+                    elif key == 'Couleur':
+                        if re.search('^[0-9A-Fa-f]{6}$', value):
+                            obj['couleur'] = int(f"0x{value}", 0)
+                        else:
+                            val = self.checkNumber(value)
+
+                            if val is None:
+                                log.error('Auto Message: Error 4')
+                                await message.add_reaction('👎')
+                                continue
+
+                            obj['couleur'] = val
                     else:
-                        obj[key.lower()] = [int(value[2:-1])]
-                elif key == 'Couleur':
-                    if re.search('^[0-9A-Fa-f]{6}$', value):
-                        obj['couleur'] = int(f"0x{value}", 0)
-                    else:
-                        val = self.checkNumber(value)
+                        obj[key.lower()] = value
 
-                        if val is None:
-                            print('Auto Message: Error 4')
-                            await message.add_reaction('👎')
-                            continue
+                if 'date' not in obj or 'salons' not in obj:
+                    log.error('Auto Message: Error 5')
+                    await message.add_reaction('👎')
+                    continue
 
-                        obj['couleur'] = val
-                else:
-                    obj[key.lower()] = value
+                if obj['date'] <= datetime.now():
+                    await message.add_reaction('⏲')
+                    continue
 
-            if 'date' not in obj or 'salons' not in obj:
-                print('Auto Message: Error 5')
-                await message.add_reaction('👎')
-                continue
-
-            if obj['date'] <= datetime.now():
-                await message.add_reaction('⏲')
-                continue
-
-            self.messages.append(obj)
+                self.messages.append(obj)
+            except Exception as e:
+                log.error('parsing of message crashed', message=message, exc_info=e)
+                await message.add_reaction('☠️')
 
     @tasks.loop(seconds=30.0)
     async def send_msg_auto(self):
