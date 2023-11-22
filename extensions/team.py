@@ -397,15 +397,21 @@ class TeamCog(BaseCog):
 
             name_team = f"{self.settings.TEAM_PREFIX}{project_team['number']}"
 
+            log_team = log.bind(team=name_team, name=project_team['name'])
+
             role_team = discord.utils.find(lambda r: r.name == name_team, self.guild.roles)
 
             if role_team is None:
+                log_team.info('create role')
                 role_team = await ctx.guild.create_role(name=name_team, mentionable=True)
+            else:
+                log_team.info('role exists')
 
             text_channel_team = discord.utils.find(lambda r: r.name.lower() == name_team.lower(),
                                                    self.category_participants.text_channels)
 
             if text_channel_team is None:
+                log_team.info('create text channel')
                 text_channel_team = await self.category_participants.create_text_channel(name_team)
 
                 perms = text_channel_team.overwrites_for(role_team)
@@ -413,37 +419,52 @@ class TeamCog(BaseCog):
                 perms.send_messages = True
 
                 await text_channel_team.set_permissions(role_team, overwrite=perms)
+            else:
+                log_team.info('text channel exists')
 
             voice_channel_team = discord.utils.find(lambda r: r.name.lower() == name_team.lower(),
                                                     self.category_participants.voice_channels)
 
             if voice_channel_team is None:
+                log_team.info('create voice channel')
                 voice_channel_team = await self.category_participants.create_voice_channel(name_team.lower())
 
                 perms = voice_channel_team.overwrites_for(role_team)
                 perms.view_channel = True
 
                 await voice_channel_team.set_permissions(role_team, overwrite=perms)
+            else:
+                log_team.info('voice channel exists')
 
-            leader_team = discord.utils.find(lambda r: r.id == project_team['leader']['discord_unique_id'],
-                                             self.guild.members)
+            if project_team['leader']:
+                leader_team: discord.Member = discord.utils.find(
+                    lambda r: r.id == project_team['leader']['discord_unique_id'],
+                    self.guild.members)
 
-            if leader_team is not None:
-                leader_team_roles = [r.name for r in leader_team.roles]
+                if leader_team is not None:
+                    leader_team_roles = [r.name for r in leader_team.roles]
 
-                if name_team not in leader_team_roles:
-                    await leader_team.add_roles(role_team)
-                    await leader_team.add_roles(self.role_chef)
+                    if name_team not in leader_team_roles:
+                        await leader_team.add_roles(role_team)
+                        await leader_team.add_roles(self.role_chef)
+            else:
+                log_team.warning('no leader for team')
 
             for member_team_data in project_team['members']:
-                member_team = discord.utils.find(lambda r: r.id == member_team_data['discord_unique_id'],
-                                                 self.guild.members)
+                member_team: discord.Member = discord.utils.find(
+                    lambda r: r.id == member_team_data['discord_unique_id'],
+                    self.guild.members)
 
                 if member_team is not None:
                     member_team_roles = [r.name for r in member_team.roles]
 
                     if name_team not in member_team_roles:
                         await member_team.add_roles(role_team)
+                else:
+                    log_team.warning('member not found', team=project_team['name'],
+                                     discord_id=member_team_data['discord_unique_id'])
+
+            log_team.info('team created', team=project_team['name'])
 
 
 async def setup(bot):
