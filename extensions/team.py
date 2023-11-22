@@ -1,7 +1,10 @@
+from functools import cached_property
+
 import discord
 import requests
 import structlog
 from discord.ext import commands
+
 from . import perms, reactions
 from .base_cog import BaseCog
 
@@ -16,11 +19,11 @@ class TeamCog(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
 
-    @property
+    @cached_property
     def role_chef(self) -> discord.Role:
-        return discord.utils.find(lambda c: c.name == self.settings.PROJECT_LEAD_ROLE, self.guild.roles)
+        return self.settings.get_role('PROJECT_LEAD')
 
-    @property
+    @cached_property
     def category_participants(self):
         return discord.utils.find(
             lambda c: c.name == self.settings.TEAM_CATEGORY,

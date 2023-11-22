@@ -1,15 +1,12 @@
+import contextlib
+from functools import cached_property
 from typing import Optional
 
-import discord
 import structlog
 from discord import Guild
 from discord.ext import commands
-from discord.ext.commands import Cog
 
-from . import perms
 from .settings import Settings
-
-import contextlib
 
 log = structlog.get_logger()
 
@@ -34,11 +31,11 @@ class BaseCog(commands.Cog):
     async def cog_load(self):
         pass
 
-    @property
+    @cached_property
     def utils_cog(self):
         return self.bot.get_cog('UtilsCog')
 
-    @property
+    @cached_property
     def settings(self) -> Settings:
         return self.utils_cog.settings
 

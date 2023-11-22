@@ -1,3 +1,4 @@
+from functools import cached_property
 from typing import Optional
 
 import discord
@@ -15,7 +16,7 @@ class WelcomeCog(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
 
-    @property
+    @cached_property
     def channel_welcome(self) -> discord.TextChannel:
         return self.settings.get_channel('WELCOME')
 
@@ -28,6 +29,7 @@ class WelcomeCog(BaseCog):
         return requests.get(f"{self.settings.URL_API}/api/attendees/").json()
 
     async def welcome_member_helper(self, ctx, member: discord.Member, attendees_data=None, pedantic=True):
+        log.info('welcome member', member=member.name, member_id=member.id)
         attendees = attendees_data or self._get_attendees_data()
 
         found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id), None)

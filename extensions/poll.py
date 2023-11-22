@@ -1,3 +1,5 @@
+from functools import cached_property
+
 import discord
 import structlog
 from discord.ext import commands
@@ -19,9 +21,9 @@ class PollCog(BaseCog):
     def __init__(self, bot):
         super().__init__(bot)
 
-    @property
+    @cached_property
     def voting_channel(self):
-        return discord.utils.find(lambda c: c.name == self.settings.CHANNEL_VOTE, self.guild.channels)
+        return self.settings.get_channel('VOTE')
 
     async def cog_load(self):
         await super().cog_load()

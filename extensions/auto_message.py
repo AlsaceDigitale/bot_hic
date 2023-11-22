@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from functools import cached_property
 
 import discord
 import discord.state
@@ -14,10 +15,9 @@ log = structlog.get_logger('auto_message')
 class AutoMessageCog(BaseCog):
     messages = []
 
-    @property
+    @cached_property
     def channel_msg_auto(self):
-        return discord.utils.find(lambda c: c.name == self.settings.CHANNEL_MSG_AUTO,
-                                  self.guild.channels)
+        return self.settings.get_channel('MSG_AUTO')
 
     def __init__(self, bot):
         super().__init__(bot)

@@ -1,3 +1,5 @@
+from functools import cached_property
+
 import discord
 from discord.ext import commands
 
@@ -12,11 +14,11 @@ class HelpCog(BaseCog):
     async def cog_load(self):
         await super().cog_load()
 
-    @property
+    @cached_property
     def channel_help(self) -> discord.TextChannel:
         return self.settings.get_channel('HELP')
 
-    @property
+    @cached_property
     def channel_support(self) -> discord.TextChannel:
         return self.settings.get_channel('SUPPORT')
 
