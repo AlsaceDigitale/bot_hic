@@ -18,7 +18,7 @@ import datetime
 # structlog.configure(logger_factory=LoggerFactory())  
 
 log = structlog.get_logger()
-log.warning("it works!", difficulty="easy")
+log.info("web server started")
 
 
 # set configuration values
@@ -50,7 +50,7 @@ def run_bot():
 
 def scheduler_event_listener(event: apscheduler.events.JobExecutionEvent):
     if event.exception:
-        log.error('The job crashed :(', exc_info=event.exception)
+        log.error('The job crashed', exc_info=event.exception)
 
 
 scheduler.add_listener(scheduler_event_listener,
