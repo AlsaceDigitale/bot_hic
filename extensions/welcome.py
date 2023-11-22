@@ -28,13 +28,14 @@ class WelcomeCog(BaseCog):
     def _get_attendees_data(self):
         return requests.get(f"{self.settings.URL_API}/api/attendees/").json()
 
-    async def welcome_member_helper(self, ctx, member: discord.Member, attendees_data=None):
+    async def welcome_member_helper(self, ctx, member: discord.Member, attendees_data=None, pedantic=True):
         attendees = attendees_data or self._get_attendees_data()
 
         found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id), None)
 
         if found_attendee is None:
-            log.warning('member not found in attendees list', member_id=member.id, member_name=member.name)
+            if pedantic:
+                log.warning('member not found in attendees list', member_id=member.id, member_name=member.name)
             return
 
         role: Optional[discord.Role] = None
@@ -44,9 +45,11 @@ class WelcomeCog(BaseCog):
                                       self.guild.roles)
 
         if role is None:
-            log.warning('no role defined or found for member', member_name=member.name, member_id=member.id)
+            if pedantic:
+                log.warning('no role defined or found for member', member_name=member.name,
+                            member_id=member.id)
 
-        await self._rename_member(found_attendee, member)
+        await self._rename_member(found_attendee, member, pedantic)
 
         if role and role not in member.roles:
             log.info('adding role to member', role=role.name, member=member.name)
@@ -54,13 +57,14 @@ class WelcomeCog(BaseCog):
             await self.channel_welcome.send(
                 f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !")
 
-    async def _rename_member(self, found_attendee, member):
+    async def _rename_member(self, found_attendee, member, pedantic=True):
         new_nick = f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}"
         if member.nick != new_nick:
             try:
-                log.info('renaming member', first_name=found_attendee['first_name'],
-                         last_name=found_attendee['last_name'],
-                         new_nick=new_nick)
+                if pedantic:
+                    log.info('renaming member', first_name=found_attendee['first_name'],
+                             last_name=found_attendee['last_name'],
+                             new_nick=new_nick)
                 await member.edit(nick=new_nick)
             except Forbidden:
                 pass
@@ -79,12 +83,13 @@ class WelcomeCog(BaseCog):
         await self.check_attendees()
 
     async def check_attendees(self):
+        log.info('check_attendees')
         attendees = self._get_attendees_data()
 
         async for member in self.guild.fetch_members(limit=None):
             found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id),
                                   None)
-            await self.welcome_member_helper(None, member, attendees)
+            await self.welcome_member_helper(None, member, attendees, pedantic=False)
 
     @commands.command(name='check_attendees')
     async def check_attendees_command(self, ctx):
