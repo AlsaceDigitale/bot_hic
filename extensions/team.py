@@ -26,8 +26,9 @@ class TeamCog(BaseCog):
         await super().cog_load()
 
         self.role_chef = discord.utils.find(lambda c: c.name == self.settings.PROJECT_LEAD_ROLE, self.guild.roles)
-        self.category_participants = discord.utils.find(lambda c: c.name == self.settings.TEAM_CATEGORY,
-                                                        self.guild.categories)
+        self.category_participants: discord.CategoryChannel = discord.utils.find(
+            lambda c: c.name == self.settings.TEAM_CATEGORY,
+            self.guild.categories)
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -205,6 +206,9 @@ class TeamCog(BaseCog):
         Rajouter des participants à une équipe. Le chef de projet est rajouté au rôle `chefdeproj`. L'équipe aura accès à un canal textuel et un canal oral. A noter:
         tous les noms d'équipes doivent commencer par '{self.bot.get_cog('UtilsCog').settings.TEAM_PREFIX}'!
         """
+
+        log_team = log.bind(command='teamup', name=nom_de_lequipe)
+
         utils_cog = self.bot.get_cog('UtilsCog')
 
         message = ctx.message
@@ -224,19 +228,51 @@ class TeamCog(BaseCog):
 
         serv_roles = await server.fetch_roles()
 
-        teamrole: discord.Role = None
-        cdp_role: discord.Role = None
+        team_role: discord.Role = None
 
         if nom_de_lequipe not in [r.name for r in serv_roles]:
-            teamrole = await server.create_role(name=nom_de_lequipe,
-                                                mentionable=True,
-                                                reason="admin through bot")
+            team_role = await self._create_role_for_team(ctx, log_team, nom_de_lequipe)
         else:
             await message.add_reaction(reactions.FAILURE)
             await ctx.send(f"L'{nom_de_lequipe} existe déjà. Utilisez `!teamadd` pour rajouter des membres.")
             return
 
         # check if chefdeproj role already exists. If not, creates it.
+        cdp_role: discord.Role = await self._ensure_team_lead_role(serv_roles, server)
+
+        await self._assign_role_for_team_lead(chef_de_projet, nom_de_lequipe, team_role)
+
+        # then each member
+        for member in members:
+            await self._assign_role_for_team_member(member, )
+
+        await message.add_reaction(reactions.SUCCESS)
+
+        msg = (f"Tout le monde a été rajouté dans l'{team_role.name}, et "
+               f"{chef_de_projet.name} "
+               f"a été rajouté aux {cdp_role.name}.\n"
+               f"il ne manque plus qu'un salon!")
+
+        await ctx.send(msg)
+
+        team_cat = self.category_participants
+
+        if team_cat is None:
+            await message.add_reaction(reactions.FAILURE)
+            await ctx.send(f"Erreur! Catégorie '{self.settings.TEAM_CATEGORY}' introuvable")
+            return
+
+        await self._create_channels_for_team(log_team, nom_de_lequipe, team_role)
+
+        msg = (f"C'est bon! <@&{team_role.id}> vous pouvez vous rendre sur"
+               f"<#{text.id}> et <#{voice.id}>.")
+
+        await ctx.send(msg)
+
+        await utils_cog.bot_log_message(f'Creation team <@&{team_role.id}> OK')
+
+    async def _ensure_team_lead_role(self, serv_roles, server):
+        cdp_role = None
         if self.settings.PROJECT_LEAD_ROLE not in [r.name for r in serv_roles]:
             cdp_role = await server.create_role(name=self.settings.PROJECT_LEAD_ROLE,
                                                 mentionable=True,
@@ -246,76 +282,7 @@ class TeamCog(BaseCog):
                 if r.name == self.settings.PROJECT_LEAD_ROLE:
                     cdp_role = r
                     break
-
-        # add the teamleader to both chefdeproj and his team's role.
-        await chef_de_projet.add_roles(teamrole, cdp_role)
-
-        # then each member
-        for member in members:
-            await member.add_roles(teamrole)
-
-        await message.add_reaction(reactions.SUCCESS)
-
-        msg = (f"Tout le monde a été rajouté dans l'{teamrole.name}, et "
-               f"{chef_de_projet.name} "
-               f"a été rajouté aux {cdp_role.name}.\n"
-               f"il ne manque plus qu'un salon!")
-
-        await ctx.send(msg)
-
-        overwrites = {
-            server.default_role: discord.PermissionOverwrite(read_messages=False),
-            teamrole: discord.PermissionOverwrite(read_messages=True),
-        }
-
-        for r in serv_roles:
-            if r.name.lower() in [self.settings.ADMIN_ROLE, 'benevoles', 'bénévoles', 'coach']:
-                overwrites[r] = discord.PermissionOverwrite(read_messages=True)
-
-        # team_cat = await server.create_category(f'PARTICIPANTS',
-        #                                             overwrites=overwrites,
-        #                                             reason='Nouvelle équipe')
-
-        team_cat = None
-
-        for cat in server.categories:
-            if cat.name == self.settings.TEAM_CATEGORY:
-                team_cat = cat
-                break
-
-        if team_cat is None:
-            await message.add_reaction(reactions.FAILURE)
-            await ctx.send(f"Erreur! Catégorie '{self.settings.TEAM_CATEGORY}' introuvable")
-            return
-
-        text: discord.TextChannel = await team_cat.create_text_channel(nom_de_lequipe)
-
-        perms = text.overwrites_for(teamrole)
-        perms.send_messages = True
-        perms.read_messages = True
-        perms.attach_files = True
-        perms.embed_links = True
-        perms.read_message_history = True
-
-        await text.set_permissions(teamrole, overwrite=perms)
-
-        voice = await team_cat.create_voice_channel(nom_de_lequipe.lower())
-
-        perms = voice.overwrites_for(teamrole)
-        perms.connect = True
-        perms.speak = True
-        perms.view_channel = True
-        perms.stream = True
-        perms.use_voice_activation = True
-
-        await voice.set_permissions(teamrole, overwrite=perms)
-
-        msg = (f"C'est bon! <@&{teamrole.id}> vous pouvez vous rendre sur"
-               f"<#{text.id}> et <#{voice.id}>.")
-
-        await ctx.send(msg)
-
-        await utils_cog.bot_log_message(f'Creation team <@&{teamrole.id}> OK')
+        return cdp_role
 
     ####SUPERCOACH
 
@@ -399,42 +366,9 @@ class TeamCog(BaseCog):
 
             log_team = log.bind(team=name_team, name=project_team['name'])
 
-            role_team = discord.utils.find(lambda r: r.name == name_team, self.guild.roles)
+            role_team = await self._create_role_for_team(ctx, log_team, name_team)
 
-            if role_team is None:
-                log_team.info('create role')
-                role_team = await ctx.guild.create_role(name=name_team, mentionable=True)
-            else:
-                log_team.info('role exists')
-
-            text_channel_team = discord.utils.find(lambda r: r.name.lower() == name_team.lower(),
-                                                   self.category_participants.text_channels)
-
-            if text_channel_team is None:
-                log_team.info('create text channel')
-                text_channel_team = await self.category_participants.create_text_channel(name_team)
-
-                perms = text_channel_team.overwrites_for(role_team)
-                perms.view_channel = True
-                perms.send_messages = True
-
-                await text_channel_team.set_permissions(role_team, overwrite=perms)
-            else:
-                log_team.info('text channel exists')
-
-            voice_channel_team = discord.utils.find(lambda r: r.name.lower() == name_team.lower(),
-                                                    self.category_participants.voice_channels)
-
-            if voice_channel_team is None:
-                log_team.info('create voice channel')
-                voice_channel_team = await self.category_participants.create_voice_channel(name_team.lower())
-
-                perms = voice_channel_team.overwrites_for(role_team)
-                perms.view_channel = True
-
-                await voice_channel_team.set_permissions(role_team, overwrite=perms)
-            else:
-                log_team.info('voice channel exists')
+            await self._create_channels_for_team(log_team, name_team, role_team)
 
             if project_team['leader']:
                 leader_team: discord.Member = discord.utils.find(
@@ -442,11 +376,7 @@ class TeamCog(BaseCog):
                     self.guild.members)
 
                 if leader_team is not None:
-                    leader_team_roles = [r.name for r in leader_team.roles]
-
-                    if name_team not in leader_team_roles:
-                        await leader_team.add_roles(role_team)
-                        await leader_team.add_roles(self.role_chef)
+                    await self._assign_role_for_team_lead(leader_team, name_team, role_team)
             else:
                 log_team.warning('no leader for team')
 
@@ -456,15 +386,66 @@ class TeamCog(BaseCog):
                     self.guild.members)
 
                 if member_team is not None:
-                    member_team_roles = [r.name for r in member_team.roles]
-
-                    if name_team not in member_team_roles:
-                        await member_team.add_roles(role_team)
+                    await self._assign_role_for_team_member(member_team, name_team, role_team)
                 else:
                     log_team.warning('member not found', team=project_team['name'],
                                      discord_id=member_team_data['discord_unique_id'])
 
             log_team.info('team created', team=project_team['name'])
+
+    async def _assign_role_for_team_member(self, member_team, name_team, role_team):
+        member_team_roles = [r.name for r in member_team.roles]
+        if name_team not in member_team_roles:
+            await member_team.add_roles(role_team)
+
+    async def _assign_role_for_team_lead(self, leader_team, name_team, role_team):
+        leader_team_roles = [r.name for r in leader_team.roles]
+        if name_team not in leader_team_roles:
+            await leader_team.add_roles(role_team)
+            await leader_team.add_roles(self.role_chef)
+
+    async def _create_channels_for_team(self, log_team, name_team, role_team):
+        text_channel_team = discord.utils.find(lambda r: r.name.lower() == name_team.lower(),
+                                               self.category_participants.text_channels)
+        if text_channel_team is None:
+            log_team.info('create text channel')
+            text_channel_team = await self.category_participants.create_text_channel(name_team)
+
+            perms = text_channel_team.overwrites_for(role_team)
+            perms.send_messages = True
+            perms.read_messages = True
+            perms.attach_files = True
+            perms.embed_links = True
+            perms.read_message_history = True
+
+            await text_channel_team.set_permissions(role_team, overwrite=perms)
+        else:
+            log_team.info('text channel exists')
+        voice_channel_team = discord.utils.find(lambda r: r.name.lower() == name_team.lower(),
+                                                self.category_participants.voice_channels)
+        if voice_channel_team is None:
+            log_team.info('create voice channel')
+            voice_channel_team = await self.category_participants.create_voice_channel(name_team.lower())
+
+            perms = voice_channel_team.overwrites_for(role_team)
+            perms.connect = True
+            perms.speak = True
+            perms.view_channel = True
+            perms.stream = True
+            perms.use_voice_activation = True
+
+            await voice_channel_team.set_permissions(role_team, overwrite=perms)
+        else:
+            log_team.info('voice channel exists')
+
+    async def _create_role_for_team(self, ctx, log_team, name_team):
+        role_team = discord.utils.find(lambda r: r.name == name_team, self.guild.roles)
+        if role_team is None:
+            log_team.info('create role')
+            role_team = await ctx.guild.create_role(name=name_team, mentionable=True)
+        else:
+            log_team.info('role exists')
+        return role_team
 
 
 async def setup(bot):
