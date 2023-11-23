@@ -6,7 +6,7 @@ import structlog
 from discord.ext import commands
 
 from . import perms, reactions
-from .base_cog import BaseCog
+from .base_cog import BaseCog, progress_message
 
 log = structlog.get_logger()
 
@@ -364,34 +364,37 @@ class TeamCog(BaseCog):
             if project_team['event'] != self.settings.EVENT_CODE:
                 continue
 
+
+
             name_team = f"{self.settings.TEAM_PREFIX}{project_team['number']}"
 
-            log_team = log.bind(team=name_team, name=project_team['name'])
+            async with progress_message(ctx, name_team):
+                log_team = log.bind(team=name_team, name=project_team['name'])
 
-            role_team = await self._create_role_for_team(ctx, log_team, name_team)
+                role_team = await self._create_role_for_team(ctx, log_team, name_team)
 
-            await self._create_channels_for_team(log_team, name_team, role_team)
+                await self._create_channels_for_team(log_team, name_team, role_team)
 
-            if project_team['leader']:
-                leader_team: discord.Member = discord.utils.find(
-                    lambda r: r.id == project_team['leader']['discord_unique_id'],
-                    self.guild.members)
+                if project_team['leader']:
+                    leader_team: discord.Member = discord.utils.find(
+                        lambda r: r.id == project_team['leader']['discord_unique_id'],
+                        self.guild.members)
 
-                if leader_team is not None:
-                    await self._assign_role_for_team_lead(leader_team, name_team, role_team)
-            else:
-                log_team.warning('no leader for team')
-
-            for member_team_data in project_team['members']:
-                member_team: discord.Member = discord.utils.find(
-                    lambda r: r.id == member_team_data['discord_unique_id'],
-                    self.guild.members)
-
-                if member_team is not None:
-                    await self._assign_role_for_team_member(member_team, name_team, role_team)
+                    if leader_team is not None:
+                        await self._assign_role_for_team_lead(leader_team, name_team, role_team)
                 else:
-                    log_team.warning('member not found', team=project_team['name'],
-                                     discord_id=member_team_data['discord_unique_id'])
+                    log_team.warning('no leader for team')
+
+                for member_team_data in project_team['members']:
+                    member_team: discord.Member = discord.utils.find(
+                        lambda r: r.id == member_team_data['discord_unique_id'],
+                        self.guild.members)
+
+                    if member_team is not None:
+                        await self._assign_role_for_team_member(member_team, name_team, role_team)
+                    else:
+                        log_team.warning('member not found', team=project_team['name'],
+                                         discord_id=member_team_data['discord_unique_id'])
 
             log_team.info('team created', team=project_team['name'])
 
