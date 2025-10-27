@@ -49,3 +49,7 @@ Le bot utilise des variables d'environnement pour sa configuration. Voici les va
 | `TIMEZONE`                     | Fuseau horaire pour la planification                               |                                                                        |
 
 Remarque : placez ces variables dans un fichier `.env` à la racine du projet ou exportez-les dans l'environnement d'exécution. Gardez `BOT_TOKEN` secret.
+
+## Commandes du bot
+
+Les commandes disponibles sont documentées dans le fichier [BOT_COMMANDS.md](BOT_COMMANDS.md).
