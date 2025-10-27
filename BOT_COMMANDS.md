@@ -195,6 +195,8 @@ Notes : la cog `WelcomeCog` appelle régulièrement l'API (`BOT_URL_API`) — co
 
 Il n'y a pas de commande utilisateur publique, mais cette cog lit un canal configuré (`BOT_CHANNEL_MSG_AUTO`) pour parser des messages planifiés et les publier automatiquement.
 
+Voir le fichier [MSG_AUTO.md](MSG_AUTO.md) pour plus de détails.
+
 ---
 
 ## Backup / non chargés par défaut
