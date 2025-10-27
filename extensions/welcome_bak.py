@@ -111,7 +111,7 @@ class WelcomeCog(BaseCog):
                 content = message.content.strip()
 
                 if self.settings.WELCOME_MODE == 'open':
-                    if not re.search('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', content):
+                    if not re.search(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', content):
                         await channel.send(
                             f"Je n'ai pas compris votre message :'(\nMerci de m'envoyer l'adresse email saisie lors de votre inscription au {self.settings.EVENT_NAME}.")
                         return
