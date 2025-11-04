@@ -97,8 +97,6 @@ class WelcomeCog(BaseCog):
         attendees = self._get_attendees_data()
 
         async for member in self.guild.fetch_members(limit=None):
-            found_attendee = next((attendee for attendee in attendees if attendee["discord_unique_id"] == member.id),
-                                  None)
             await self.welcome_member_helper(None, member, attendees, pedantic=False)
 
     @commands.command(name='check_attendees')
