@@ -61,12 +61,20 @@ class WelcomeCog(BaseCog):
 
     async def _rename_member(self, found_attendee, member, pedantic=True):
         new_nick = f"{found_attendee['first_name'].title()} {found_attendee['last_name'][0].upper()}"
+        
+        # Discord nicknames must be 32 characters or fewer
+        if len(new_nick) > 32:
+            # Truncate the first name if needed, keeping at least the last name initial
+            max_first_name_length = 30  # 32 - 1 (space) - 1 (last name initial)
+            truncated_first_name = found_attendee['first_name'].title()[:max_first_name_length]
+            new_nick = f"{truncated_first_name} {found_attendee['last_name'][0].upper()}"
+            
         if member.nick != new_nick:
             try:
                 if pedantic:
                     log.info('renaming member', first_name=found_attendee['first_name'],
                              last_name=found_attendee['last_name'],
-                             new_nick=new_nick)
+                             new_nick=new_nick, nick_length=len(new_nick))
                 await member.edit(nick=new_nick)
             except Forbidden:
                 pass
