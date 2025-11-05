@@ -199,6 +199,20 @@ Voir le fichier [MSG_AUTO.md](MSG_AUTO.md) pour plus de détails.
 
 ---
 
+## Check-in (extensions.checkin)
+
+- checkin
+  - Usage : `!checkin @member`
+  - Paramètres : member (discord.Member) : mention du membre à enregistrer
+  - Description : enregistre la présence physique d'un participant à l'événement. Le bot appelle l'API hic-manager pour marquer l'heure d'arrivée. Requiert `is_support_user` (rôle Support).
+
+- checkin_status
+  - Usage : `!checkin_status [@member]`
+  - Paramètres : member (discord.Member, optionnel) : mention du membre dont on veut voir le statut. Si omis, affiche le statut de l'appelant.
+  - Description : affiche les informations de check-in d'un participant (nom, rôle, heure d'arrivée, qui l'a enregistré). Accessible à tous.
+
+---
+
 ## Backup / non chargés par défaut
 
 Le dépôt contient aussi `extensions/welcome_bak.py` (version de backup) qui contient des commandes supplémentaires :
