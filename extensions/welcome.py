@@ -23,7 +23,12 @@ class WelcomeCog(BaseCog):
     async def cog_load(self):
         await super().cog_load()
 
-        self.check_attendees_task.start()
+        # Only start the automatic check task if WELCOME_MODE is 'open'
+        if self.settings.WELCOME_MODE == 'open':
+            log.info('starting check_attendees_task (WELCOME_MODE=open)')
+            self.check_attendees_task.start()
+        else:
+            log.info('check_attendees_task disabled (WELCOME_MODE=close)')
 
     def _get_attendees_data(self):
         return requests.get(f"{self.settings.URL_API}/api/attendees/").json()
