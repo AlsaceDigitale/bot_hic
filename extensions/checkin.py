@@ -3,6 +3,7 @@ import requests
 from discord.ext import commands
 
 from extensions.base_cog import BaseCog
+from extensions.perms import is_support_user
 
 
 class CheckinCog(BaseCog):
@@ -17,7 +18,7 @@ class CheckinCog(BaseCog):
         self.api_url = self.settings.URL_API
 
     @commands.command(name='checkin')
-    @commands.check(lambda ctx: BaseCog.is_support_user(ctx))
+    @commands.check(is_support_user)
     async def checkin(self, ctx, member: discord.Member):
         """
         Commande: !checkin
