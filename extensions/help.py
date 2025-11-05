@@ -37,7 +37,7 @@ class HelpCog(BaseCog):
         embed.description += "n'hésitez pas à lui parler directement plutôt qu'encombrer les canaux de discussion.\n"
         # embed.description += "- `<@&806281615894380595>` : pour appeler **tous** les bénévole. Autrement faite !support\n"
         embed.description += f"- {self.settings.get_role('FACILITATEUR').mention} : pour appeler **tous** les facilitateurs. Autrement faites `!coach`\n"
-        embed.description += f"- {self.settings.get_role('ORGA').mention} : si quelqu'un doit passer au conseil disciplinaire. Autrement faite `!orga`\n"
+        embed.description += f"- {self.settings.get_role('ORGA').mention} : si quelqu'un doit passer au conseil disciplinaire. Autrement faites `!orga`\n"
         embed.description += "\n"
         embed.description += "**Votes et sondages**\n" \
                              f"Les sondages apparaissent dans le canal {self.settings.get_channel('VOTE').mention}. " \
