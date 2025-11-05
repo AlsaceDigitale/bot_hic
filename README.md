@@ -27,7 +27,7 @@ Le bot utilise des variables d'environnement pour sa configuration. Voici les va
 | `BOT_FACILITATEUR_ROLE`        | Nom du rôle "Facilitateur"                                         | `Facilitateur`                                                         |
 | `BOT_PROJECT_LEAD_ROLE`        | Nom du rôle Chef de projet (utilisé pour les leads d'équipe)       | `Chef de Projet`                                                       |
 | `BOT_ORGA_ROLE`                | Nom du rôle organisateur                                           | `Organisation`                                                         |
-| `BOT_WELCOME_MODE`             | Mode d'accueil (`open` ou `close`)                                 | `close`                                                                |
+| `BOT_WELCOME_MODE`             | Mode d'accueil : `open` = accueil automatique activé (vérifie toutes les 5 min et accueille les nouveaux membres) ; `close` = accueil manuel uniquement (via `!welcome_member`) | `close`                                                                |
 | `BOT_TEAM_PREFIX`              | Préfixe attendu pour les noms d'équipes                            | `Equipe-`                                                              |
 | `BOT_HELP_LINKS`               | Liens d'aide affichés (séparés par des virgules)                   | `HIC,https://www.hackingindustry.camp,Le sparkboard,...                |
 | `BOT_CHANNEL_HELP`             | Nom du canal d'aide                                                | `demandes-aide`                                                        |
