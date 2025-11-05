@@ -10,7 +10,11 @@ class CheckinCog(BaseCog):
 
     def __init__(self, bot):
         super().__init__(bot)
-        self.api_url = self.settings.BOT_URL_API
+        self.api_url = None
+
+    async def cog_load(self):
+        await super().cog_load()
+        self.api_url = self.settings.URL_API
 
     @commands.command(name='checkin')
     @commands.check(lambda ctx: BaseCog.is_support_user(ctx))
