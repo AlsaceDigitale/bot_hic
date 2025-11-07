@@ -32,7 +32,15 @@ class WelcomeCog(BaseCog):
             log.info('check_attendees_task disabled (WELCOME_MODE=close)')
 
     def _get_attendees_data(self):
-        return requests.get(f"{self.settings.URL_API}/api/attendees/").json()
+        response = requests.get(f"{self.settings.URL_API}/api/attendees/", timeout=10)
+        response.raise_for_status()
+        
+        # Handle empty response
+        if not response.text.strip():
+            log.error('attendees_api_empty_response')
+            return []
+        
+        return response.json()
 
     async def welcome_member_helper(self, ctx, member: discord.Member, attendees_data=None, pedantic=True):
         if pedantic:
@@ -241,6 +249,15 @@ class WelcomeCog(BaseCog):
                 await ctx.send(f"❌ Unexpected error: {str(e)}")
                 log.error('link_member_error', exc_info=e)
 
+    @link_member.error
+    async def link_member_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send('❌ Usage: `!link_member @member email@example.com [role_name]`')
+        elif isinstance(error, commands.CheckFailure):
+            await ctx.send('❌ You need the Support role to use this command.')
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send('❌ Invalid arguments. Usage: `!link_member @member email@example.com [role_name]`')
+
     @commands.command(name='create_member')
     @commands.check(is_support_user)
     async def create_member(self, ctx, member: discord.Member, first_name: str, last_name: str, email: str, *, role_name: str = None):
@@ -402,6 +419,15 @@ class WelcomeCog(BaseCog):
             except Exception as e:
                 await ctx.send(f"❌ Unexpected error: {str(e)}")
                 log.error('create_member_error', exc_info=e)
+
+    @create_member.error
+    async def create_member_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send('❌ Usage: `!create_member @member FirstName LastName email@example.com [role_name]`')
+        elif isinstance(error, commands.CheckFailure):
+            await ctx.send('❌ You need the Support role to use this command.')
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send('❌ Invalid arguments. Usage: `!create_member @member FirstName LastName email@example.com [role_name]`')
 
     @commands.command(name='nudge_unidentified_users')
     @commands.check(is_support_user)
