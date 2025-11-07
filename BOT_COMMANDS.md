@@ -187,6 +187,31 @@ Notes : le comportement de vote (limite de votes, acceptation d'emojis) dépend 
   - Paramètres : aucun
   - Description : renomme tous les membres reconnus par l'API selon la convention (Prénom NOMInitiale). Utilise l'API d'attendees pour récupérer les données.
 
+- link_member
+  - Usage : `!link_member @membre email@example.com [role_name]`
+  - Paramètres : membre (discord.Member), email (str), role_name (str, optionnel)
+  - Permission : **Support role** (BOT_ADMIN_ROLE)
+  - Description : lie manuellement un membre Discord à un attendee dans le backend en utilisant l'adresse email. Met à jour le backend avec l'ID Discord unique, le nom d'utilisateur, le statut JOINED, et le rôle. Assigne automatiquement le rôle Discord "Participant" (ou le rôle spécifié) et renomme l'utilisateur. Si aucun rôle n'est spécifié, utilise la valeur de `BOT_PARTICIPANT_ROLE`. Utile quand : un utilisateur a été ajouté manuellement au backend sans OAuth, un utilisateur a rejoint Discord avant de compléter l'enregistrement, ou le flux OAuth a échoué. Affiche un avertissement si l'email est déjà lié à un autre compte Discord ou si le rôle Discord n'existe pas sur le serveur.
+  - Exemples :
+    - `!link_member @JohnDoe john@example.com` (assigne le rôle Participant par défaut)
+    - `!link_member @CoachJane jane@example.com Coach` (assigne le rôle Coach)
+
+- create_member
+  - Usage : `!create_member @membre FirstName LastName email@example.com [role_name]`
+  - Paramètres : membre (discord.Member), first_name (str), last_name (str), email (str), role_name (str, optionnel - peut contenir des espaces)
+  - Permission : **Support role** (BOT_ADMIN_ROLE)
+  - Description : crée ou met à jour un attendee dans le backend et le lie à un membre Discord. Si l'attendee n'existe pas, le crée et l'associe automatiquement au dernier événement dans la base de données. Si l'attendee existe mais n'est PAS lié à Discord, le met à jour et le lie. **ÉCHOUE** si l'attendee existe et est déjà lié à un AUTRE utilisateur Discord (affiche le nom de l'utilisateur existant). Assigne automatiquement le rôle Discord "Participant" (ou le rôle spécifié), met le statut à JOINED, et renomme l'utilisateur. Utile pour ajouter rapidement des participants qui arrivent sur Discord sans pré-enregistrement.
+  - Exemples :
+    - `!create_member @NewUser John Doe john.doe@example.com` (crée avec rôle Participant)
+    - `!create_member @Mentor Jane Smith jane@example.com Mentor` (crée avec rôle Mentor)
+    - `!create_member @Lead Pierre Martin pierre@example.com Chef de Projet` (rôle avec espaces)
+
+- nudge_unidentified_users
+  - Usage : `!nudge_unidentified_users`
+  - Paramètres : aucun
+  - Permission : **Support role** (BOT_ADMIN_ROLE)
+  - Description : envoie un message privé (DM) à tous les membres du serveur Discord qui n'ont pas été identifiés dans le système backend (pas de `discord_unique_id` correspondant). Le message les encourage à vérifier leurs emails et à compléter le processus OAuth pour lier leur compte Discord à leur inscription. Affiche un résumé du nombre de DMs envoyés/échoués. Utile pour rappeler aux participants de finaliser leur inscription.
+
 Notes : la cog `WelcomeCog` appelle régulièrement l'API (`BOT_URL_API`) — configurez correctement la variable d'environnement.
 
 ---
