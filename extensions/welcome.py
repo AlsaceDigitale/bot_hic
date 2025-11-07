@@ -167,16 +167,31 @@ class WelcomeCog(BaseCog):
                     await ctx.send(f"❌ No attendee found with email `{email}` in the backend.")
                     return
                 
-                # Check if attendee is already linked to another Discord user
+                # Determine role to assign - use parameter, or default to Participant
+                target_role_name = role_name or self.settings.PARTICIPANT_ROLE
+                
+                # Check if attendee is already linked to this Discord user
+                if found_attendee.get('discord_unique_id') == member.id:
+                    # Already linked to the same user - check if role would change
+                    current_role = found_attendee.get('role', '')
+                    
+                    if current_role and current_role != target_role_name:
+                        await ctx.send(
+                            f"❌ Error: {member.mention} is already linked to `{email}` with role `{current_role}`. "
+                            f"Cannot change to role `{target_role_name}`. Use !create_member to update the role."
+                        )
+                        return
+                    else:
+                        await ctx.send(f"ℹ️ {member.mention} is already linked to `{email}`. No changes needed.")
+                        return
+                
+                # Check if attendee is already linked to a DIFFERENT Discord user
                 if found_attendee.get('discord_unique_id') and found_attendee['discord_unique_id'] != member.id:
                     existing_discord_username = found_attendee.get('discord_username', 'unknown')
                     await ctx.send(
                         f"⚠️ Warning: Attendee `{email}` is already linked to Discord user `{existing_discord_username}` "
                         f"(ID: {found_attendee['discord_unique_id']}). Proceeding will overwrite this link."
                     )
-                
-                # Determine role to assign - use parameter, or default to Participant
-                target_role_name = role_name or self.settings.PARTICIPANT_ROLE
                 
                 # Update backend via API
                 attendee_id = found_attendee['id']
@@ -297,16 +312,24 @@ class WelcomeCog(BaseCog):
                 
                 # Check if attendee exists and is linked to another Discord user
                 if found_attendee:
-                    if found_attendee.get('discord_unique_id') and found_attendee['discord_unique_id'] != member.id:
+                    existing_discord_id = found_attendee.get('discord_unique_id')
+                    
+                    # Case 1: Already linked to the SAME Discord user - allow update
+                    if existing_discord_id == member.id:
+                        log.info('create_member_updating_existing', member=member.name, email=email)
+                        # Continue to UPDATE section below
+                    
+                    # Case 2: Linked to a DIFFERENT Discord user - fail
+                    elif existing_discord_id:
                         existing_discord_username = found_attendee.get('discord_username', 'unknown')
                         await ctx.send(
                             f"❌ **Command Failed**: Attendee with email `{email}` is already linked to Discord user `{existing_discord_username}` "
-                            f"(ID: {found_attendee['discord_unique_id']}).\n"
+                            f"(ID: {existing_discord_id}).\n"
                             f"Cannot link to {member.mention} because the attendee is already associated with another Discord account."
                         )
                         log.warning('create_member_already_linked', 
                                    email=email, 
-                                   existing_discord_id=found_attendee['discord_unique_id'],
+                                   existing_discord_id=existing_discord_id,
                                    existing_discord_username=existing_discord_username,
                                    attempted_member=member.name)
                         return
