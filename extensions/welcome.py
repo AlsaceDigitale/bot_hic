@@ -165,6 +165,7 @@ class WelcomeCog(BaseCog):
                 pass
 
     @commands.command(name='welcome_member')
+    @commands.check(is_support_user)
     async def welcome_member(self, ctx, member: discord.Member):
         async with progress_message(ctx, f'welcome_member {member.mention}'):
             await self.welcome_member_helper(ctx, member)
@@ -185,11 +186,13 @@ class WelcomeCog(BaseCog):
             await self.welcome_member_helper(None, member, attendees, pedantic=False)
 
     @commands.command(name='check_attendees')
+    @commands.check(is_support_user)
     async def check_attendees_command(self, ctx):
         async with progress_message(ctx, 'check attendees'):
             await self.check_attendees()
 
     @commands.command(name='change_nicks')
+    @commands.check(is_support_user)
     async def change_nicks(self, ctx):
         async with progress_message(ctx, 'changing nicks'):
             attendees = self._get_attendees_data()

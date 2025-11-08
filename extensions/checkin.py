@@ -75,12 +75,14 @@ class CheckinCog(BaseCog):
             self.logger.error(f"Check-in API error: {e}")
 
     @commands.command(name='checkin_status')
+    @commands.check(is_support_user)
     async def checkin_status(self, ctx, member: discord.Member = None):
         """
         Commande: !checkin_status
         Argument: [@member] (optional)
         
         Check the check-in status of a member (or yourself if no member specified).
+        Requires Support role.
         """
         
         target = member or ctx.author
@@ -129,6 +131,11 @@ class CheckinCog(BaseCog):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Usage: !checkin @member')
         elif isinstance(error, commands.CheckFailure):
+            await ctx.send('❌ You need the Support role to use this command.')
+
+    @checkin_status.error
+    async def checkin_status_error(self, ctx, error):
+        if isinstance(error, commands.CheckFailure):
             await ctx.send('❌ You need the Support role to use this command.')
 
 

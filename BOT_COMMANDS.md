@@ -245,7 +245,8 @@ Voir le fichier [MSG_AUTO.md](MSG_AUTO.md) pour plus de détails.
 - checkin_status
   - Usage : `!checkin_status [@member]`
   - Paramètres : member (discord.Member, optionnel) : mention du membre dont on veut voir le statut. Si omis, affiche le statut de l'appelant.
-  - Description : affiche les informations de check-in d'un participant (nom, rôle, heure d'arrivée, qui l'a enregistré). Accessible à tous.
+  - Permission : **Support role** (BOT_ADMIN_ROLE)
+  - Description : affiche les informations de check-in d'un participant (nom, rôle, heure d'arrivée, qui l'a enregistré). Requiert le rôle Support.
 
 ---
 
