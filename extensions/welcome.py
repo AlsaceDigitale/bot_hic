@@ -542,6 +542,7 @@ class WelcomeCog(BaseCog):
             failed_count = 0
             skipped_bots = 0
             skipped_offline = 0
+            notified_users = []  # Track successfully notified users
             
             async for member in self.guild.fetch_members(limit=None):
                 # Skip bots
@@ -567,6 +568,7 @@ class WelcomeCog(BaseCog):
                     embed = self._create_nudge_embed(member)
                     await dm_channel.send(embed=embed)
                     success_count += 1
+                    notified_users.append(member)  # Add to list of notified users
                     log.info('nudge_dm_sent', member=member.name, member_id=member.id)
                     
                     # Rate limiting: wait 0.5 seconds between DMs to avoid hitting Discord limits
@@ -580,16 +582,56 @@ class WelcomeCog(BaseCog):
                     failed_count += 1
                     log.error('nudge_dm_failed', member=member.name, member_id=member.id, exc_info=e)
             
-            # Send summary to the channel
-            summary = (
-                f"📊 **Nudge Summary:**\n"
-                f"✅ DMs sent: {success_count}\n"
-                f"❌ Failed (DMs disabled or error): {failed_count}\n"
-                f"💤 Offline users skipped: {skipped_offline}\n"
-                f"🤖 Bots skipped: {skipped_bots}\n"
-                f"📝 Total unidentified online: {success_count + failed_count}"
+            # Create a nice embed with summary
+            result_embed = discord.Embed(
+                title="📊 Nudge Report",
+                description="Summary of unidentified users notification",
+                color=0x00FF00 if success_count > 0 else 0xFF9900
             )
-            await ctx.send(summary)
+            
+            result_embed.add_field(
+                name="📈 Statistics",
+                value=(
+                    f"✅ DMs sent: **{success_count}**\n"
+                    f"❌ Failed: **{failed_count}**\n"
+                    f"💤 Offline (skipped): **{skipped_offline}**\n"
+                    f"🤖 Bots (skipped): **{skipped_bots}**\n"
+                    f"📝 Total unidentified online: **{success_count + failed_count}**"
+                ),
+                inline=False
+            )
+            
+            result_embed.set_footer(text=f"Completed at {discord.utils.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
+            
+            await ctx.send(embed=result_embed)
+            
+            # Create detailed user list embeds (without mentions to avoid pinging them)
+            if notified_users:
+                # Discord embed field has a 1024 character limit, embed description has 4096 limit
+                # We'll use multiple embeds if needed, showing ~40 users per embed
+                users_per_embed = 40
+                total_embeds = (len(notified_users) + users_per_embed - 1) // users_per_embed
+                
+                for embed_index in range(total_embeds):
+                    start_idx = embed_index * users_per_embed
+                    end_idx = min(start_idx + users_per_embed, len(notified_users))
+                    users_batch = notified_users[start_idx:end_idx]
+                    
+                    # Format usernames - use display name or username, NOT mentions
+                    user_list = "\n".join([
+                        f"• `{member.display_name}` (@{member.name})"
+                        for member in users_batch
+                    ])
+                    
+                    user_embed = discord.Embed(
+                        title=f"✉️ Notified Users ({len(notified_users)} total)" if embed_index == 0 else f"✉️ Notified Users (continued)",
+                        description=user_list,
+                        color=0x5865F2  # Discord blurple
+                    )
+                    
+                    user_embed.set_footer(text=f"Page {embed_index + 1}/{total_embeds}")
+                    await ctx.send(embed=user_embed)
+            
             log.info('nudge_complete', success=success_count, failed=failed_count, offline=skipped_offline, bots=skipped_bots)
 
     @commands.command(name='nudge_test')
