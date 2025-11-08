@@ -1,5 +1,6 @@
 from functools import cached_property
 from typing import Optional
+import asyncio
 
 import discord
 import requests
@@ -475,14 +476,50 @@ class WelcomeCog(BaseCog):
         elif isinstance(error, commands.BadArgument):
             await ctx.send('❌ Invalid arguments. Usage: `!create_member @member FirstName LastName email@example.com [role_name]`')
 
+    def _create_nudge_embed(self, member: discord.Member) -> discord.Embed:
+        """
+        Creates the nudge message embed for unidentified users.
+        
+        Args:
+            member: The Discord member to create the message for
+            
+        Returns:
+            discord.Embed: The formatted nudge message
+        """
+        embed = discord.Embed(
+            title=f"🔔 Action requise - {self.settings.EVENT_NAME}",
+            description=(
+                f"Bonjour **{member.display_name}**,\n\n"
+                f"Nous avons remarqué que vous avez rejoint le serveur Discord du **{self.settings.EVENT_NAME}**, "
+                f"mais votre compte Discord n'est pas encore lié à votre inscription.\n\n"
+                f"**Pour profiter pleinement de l'événement, merci de :**\n"
+                f"1️⃣ Vérifier vos emails (y compris les spams/promotions)\n"
+                f"2️⃣ Chercher l'email d'invitation du {self.settings.EVENT_NAME}\n"
+                f"3️⃣ Cliquer sur le lien personnel dans cet email\n"
+                f"4️⃣ Autoriser l'application Discord pour finaliser votre inscription\n\n"
+                f"**Pourquoi c'est important ?**\n"
+                f"✅ Recevoir votre rôle de participant automatiquement\n"
+                f"✅ Être renommé(e) avec votre vrai nom\n"
+                f"✅ Être pris(e) en compte pour le check-in\n"
+                f"✅ Accéder à toutes les fonctionnalités de l'événement\n\n"
+                f"Si vous n'avez pas reçu d'email ou si vous rencontrez des difficultés, "
+                f"contactez l'équipe **{self.settings.ADMIN_ROLE}** sur le serveur."
+            ),
+            color=0xFFA500  # Orange color for attention
+        )
+        embed.set_footer(text=f"Message automatique du bot {self.settings.EVENT_NAME}")
+        return embed
+
     @commands.command(name='nudge_unidentified_users')
     @commands.check(is_support_user)
     async def nudge_unidentified_users(self, ctx):
         """
         Command: !nudge_unidentified_users
         
-        Sends a DM to all Discord server members who have not been identified
+        Sends a DM to all ONLINE Discord server members who have not been identified
         in the backend system (no discord_unique_id match).
+        
+        Offline users are skipped to avoid spamming inactive members.
         
         This reminds them to check their email and complete the OAuth flow
         to link their Discord account with their registration.
@@ -501,11 +538,17 @@ class WelcomeCog(BaseCog):
             success_count = 0
             failed_count = 0
             skipped_bots = 0
+            skipped_offline = 0
             
             async for member in self.guild.fetch_members(limit=None):
                 # Skip bots
                 if member.bot:
                     skipped_bots += 1
+                    continue
+                
+                # Skip offline users
+                if member.status == discord.Status.offline:
+                    skipped_offline += 1
                     continue
                 
                 # Check if member is identified in the backend
@@ -518,32 +561,13 @@ class WelcomeCog(BaseCog):
                     if dm_channel is None:
                         dm_channel = await member.create_dm()
                     
-                    embed = discord.Embed(
-                        title=f"🔔 Action requise - {self.settings.EVENT_NAME}",
-                        description=(
-                            f"Bonjour **{member.display_name}**,\n\n"
-                            f"Nous avons remarqué que vous avez rejoint le serveur Discord du **{self.settings.EVENT_NAME}**, "
-                            f"mais votre compte Discord n'est pas encore lié à votre inscription.\n\n"
-                            f"**Pour profiter pleinement de l'événement, merci de :**\n"
-                            f"1️⃣ Vérifier vos emails (y compris les spams/promotions)\n"
-                            f"2️⃣ Chercher l'email d'invitation du {self.settings.EVENT_NAME}\n"
-                            f"3️⃣ Cliquer sur le lien personnel dans cet email\n"
-                            f"4️⃣ Autoriser l'application Discord pour finaliser votre inscription\n\n"
-                            f"**Pourquoi c'est important ?**\n"
-                            f"✅ Recevoir votre rôle de participant automatiquement\n"
-                            f"✅ Être renommé(e) avec votre vrai nom\n"
-                            f"✅ Être pris(e) en compte pour le check-in\n"
-                            f"✅ Accéder à toutes les fonctionnalités de l'événement\n\n"
-                            f"Si vous n'avez pas reçu d'email ou si vous rencontrez des difficultés, "
-                            f"contactez l'équipe **{self.settings.ADMIN_ROLE}** sur le serveur."
-                        ),
-                        color=0xFFA500  # Orange color for attention
-                    )
-                    embed.set_footer(text=f"Message automatique du bot {self.settings.EVENT_NAME}")
-                    
+                    embed = self._create_nudge_embed(member)
                     await dm_channel.send(embed=embed)
                     success_count += 1
                     log.info('nudge_dm_sent', member=member.name, member_id=member.id)
+                    
+                    # Rate limiting: wait 0.5 seconds between DMs to avoid hitting Discord limits
+                    await asyncio.sleep(0.5)
                     
                 except Forbidden:
                     # User has DMs disabled
@@ -558,11 +582,43 @@ class WelcomeCog(BaseCog):
                 f"📊 **Nudge Summary:**\n"
                 f"✅ DMs sent: {success_count}\n"
                 f"❌ Failed (DMs disabled or error): {failed_count}\n"
+                f"💤 Offline users skipped: {skipped_offline}\n"
                 f"🤖 Bots skipped: {skipped_bots}\n"
-                f"📝 Total unidentified: {success_count + failed_count}"
+                f"📝 Total unidentified online: {success_count + failed_count}"
             )
             await ctx.send(summary)
-            log.info('nudge_complete', success=success_count, failed=failed_count, bots=skipped_bots)
+            log.info('nudge_complete', success=success_count, failed=failed_count, offline=skipped_offline, bots=skipped_bots)
+
+    @commands.command(name='nudge_test')
+    @commands.check(is_support_user)
+    async def nudge_test(self, ctx):
+        """
+        Command: !nudge_test
+        
+        Sends the nudge message to the user invoking the command for testing purposes.
+        This allows support users to preview the exact message that unidentified users will receive.
+        
+        Requires Support role.
+        """
+        author = ctx.author
+        log.info('nudge_test', user=author.name, user_id=author.id)
+        
+        try:
+            dm_channel = author.dm_channel
+            if dm_channel is None:
+                dm_channel = await author.create_dm()
+            
+            embed = self._create_nudge_embed(author)
+            await dm_channel.send(embed=embed)
+            await ctx.send(f"✅ Message de test envoyé en DM à {author.mention}")
+            log.info('nudge_test_sent', user=author.name, user_id=author.id)
+            
+        except Forbidden:
+            await ctx.send(f"❌ Impossible d'envoyer le DM - vérifiez que vos messages privés sont activés")
+            log.warning('nudge_test_failed_forbidden', user=author.name, user_id=author.id)
+        except Exception as e:
+            await ctx.send(f"❌ Erreur lors de l'envoi du message de test")
+            log.error('nudge_test_failed', user=author.name, user_id=author.id, exc_info=e)
 
 
 async def setup(bot):

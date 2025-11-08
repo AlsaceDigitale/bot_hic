@@ -215,7 +215,13 @@ Notes : le comportement de vote (limite de votes, acceptation d'emojis) dépend 
   - Usage : `!nudge_unidentified_users`
   - Paramètres : aucun
   - Permission : **Support role** (BOT_ADMIN_ROLE)
-  - Description : envoie un message privé (DM) à tous les membres du serveur Discord qui n'ont pas été identifiés dans le système backend (pas de `discord_unique_id` correspondant). Le message les encourage à vérifier leurs emails et à compléter le processus OAuth pour lier leur compte Discord à leur inscription. Affiche un résumé du nombre de DMs envoyés/échoués. Utile pour rappeler aux participants de finaliser leur inscription.
+  - Description : envoie un message privé (DM) à tous les membres **en ligne** du serveur Discord qui n'ont pas été identifiés dans le système backend (pas de `discord_unique_id` correspondant). Les utilisateurs hors ligne sont ignorés pour éviter de spammer les membres inactifs. Le message les encourage à vérifier leurs emails et à compléter le processus OAuth pour lier leur compte Discord à leur inscription. Affiche un résumé du nombre de DMs envoyés/échoués/utilisateurs hors ligne. Utile pour rappeler aux participants actifs de finaliser leur inscription.
+
+- nudge_test
+  - Usage : `!nudge_test`
+  - Paramètres : aucun
+  - Permission : **Support role** (BOT_ADMIN_ROLE)
+  - Description : envoie le message de nudge à l'utilisateur qui invoque la commande pour tester le contenu et le format du message. Permet aux utilisateurs support de prévisualiser exactement le message que les utilisateurs non identifiés recevront avant d'exécuter `!nudge_unidentified_users`. Utile pour vérifier que le message est approprié et que les DMs fonctionnent.
 
 Notes : la cog `WelcomeCog` appelle régulièrement l'API (`BOT_URL_API`) — configurez correctement la variable d'environnement.
 
