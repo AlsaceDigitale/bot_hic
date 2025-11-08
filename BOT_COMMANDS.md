@@ -240,6 +240,7 @@ Voir le fichier [MSG_AUTO.md](MSG_AUTO.md) pour plus de détails.
 - checkin
   - Usage : `!checkin @member`
   - Paramètres : member (discord.Member) : mention du membre à enregistrer
+  - Permission : **Support role** (BOT_ADMIN_ROLE)
   - Description : enregistre la présence physique d'un participant à l'événement. Le bot appelle l'API hic-manager pour marquer l'heure d'arrivée. Requiert `is_support_user` (rôle Support).
 
 - checkin_status
@@ -247,6 +248,38 @@ Voir le fichier [MSG_AUTO.md](MSG_AUTO.md) pour plus de détails.
   - Paramètres : member (discord.Member, optionnel) : mention du membre dont on veut voir le statut. Si omis, affiche le statut de l'appelant.
   - Permission : **Support role** (BOT_ADMIN_ROLE)
   - Description : affiche les informations de check-in d'un participant (nom, rôle, heure d'arrivée, qui l'a enregistré). Requiert le rôle Support.
+
+### Auto Check-in
+
+Le système de check-in automatique peut être activé avec la variable d'environnement `AUTO_CHECKIN_ENABLED=true`. Quand activé :
+- Les participants sont automatiquement enregistrés lors de leur premier message sur le serveur Discord pendant l'événement
+- Le check-in est **silencieux** (pas de DM envoyé à l'utilisateur)
+- L'enregistrement est marqué avec "Auto (Message Activity)" comme vérificateur
+- **Cache intelligent** : 
+  - Les utilisateurs **enregistrés avec succès** sont marqués comme 'checked' et ne génèrent **aucune requête API supplémentaire** (cache permanent jusqu'au redémarrage du bot)
+  - Les tentatives échouées sont en cooldown de 5 minutes avant nouvelle tentative
+  - Nettoyage automatique des échecs anciens (> 1 heure) quand le cache dépasse 100 entrées
+- Fonctionne en parallèle du check-in manuel (`!checkin`)
+- N'affecte pas les participants déjà enregistrés (pas de double enregistrement)
+
+**Dates d'événement et filtrage temporel** :
+- Le backend Django a des champs `Event.start_date` et `Event.end_date` (migration 0019)
+- **Comportement actuel** : L'auto check-in fonctionne **à tout moment** (permissif par défaut)
+- **Raison** : Pas encore d'endpoint API exposant les dates d'événement
+- **Quand les dates sont disponibles** : Le bot vérifiera automatiquement si l'événement est actif
+- **Si pas de dates configurées** : L'auto check-in reste autorisé (évite de bloquer la fonctionnalité)
+- **Check-in manuel** : Fonctionne toujours, indépendamment des dates (pour les cas exceptionnels)
+- Cache des dates : Rafraîchi toutes les 5 minutes pour éviter les appels API répétés
+
+**Protection contre la surcharge**:
+- Cache local à trois états : 'checked' (permanent), 'pending' (en cours), timestamp (échec temporaire)
+- Les utilisateurs enregistrés ne génèrent **plus jamais** de requête API
+- Cooldown de 5 minutes uniquement pour les échecs (utilisateur non trouvé, erreur API, etc.)
+- Cache conserve les utilisateurs enregistrés indéfiniment (jusqu'au redémarrage)
+
+**Performance** : Pour un événement de 500 participants, maximum ~500-600 requêtes API totales (1 par participant + quelques réessais), soit <0.01 req/sec en moyenne sur un weekend.
+
+Configuration recommandée : activer pendant l'événement, désactiver en dehors.
 
 ---
 

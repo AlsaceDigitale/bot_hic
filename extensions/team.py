@@ -454,6 +454,7 @@ class TeamCog(BaseCog):
         await ctx.message.add_reaction(reactions.SUCCESS)
 
     @commands.command(name='teamapi')
+    @commands.check(perms.is_support_user)
     async def teamapi(self, ctx):
         project_teams = requests.get(f"{self.settings.URL_API}/api/project-teams/").json()
 
