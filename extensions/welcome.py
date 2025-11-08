@@ -41,6 +41,76 @@ class WelcomeCog(BaseCog):
             return []
         
         return response.json()
+    
+    async def _assign_discord_role(self, member: discord.Member, role_name: str, context: str = 'operation'):
+        """
+        Assigns a Discord role to a member.
+        
+        Returns:
+            bool: True if role was assigned or already present, False otherwise
+        """
+        discord_role = discord.utils.find(lambda r: r.name.lower() == role_name.lower(), self.guild.roles)
+        
+        if not discord_role:
+            log.warning(f'{context}_role_not_found', member=member.name, role_name=role_name)
+            return False
+        
+        if discord_role in member.roles:
+            log.info(f'{context}_role_already_assigned', member=member.name, role=discord_role.name)
+            return True
+        
+        try:
+            await member.add_roles(discord_role)
+            log.info(f'{context}_role_assigned', member=member.name, role=discord_role.name)
+            return True
+        except Forbidden:
+            log.warning(f'{context}_role_permission_denied', member=member.name, role_name=role_name)
+            return False
+    
+    async def _finalize_member_link(self, ctx, member: discord.Member, attendee_id: int, email: str, role_name: str, context: str = 'operation'):
+        """
+        Finalizes member linking by assigning role, renaming, and sending welcome message.
+        
+        Returns:
+            bool: True if role was assigned successfully
+        """
+        # Assign the Discord role
+        role_assigned = await self._assign_discord_role(member, role_name, context)
+        
+        if not role_assigned:
+            discord_role = discord.utils.find(lambda r: r.name.lower() == role_name.lower(), self.guild.roles)
+            if not discord_role:
+                await ctx.send(f"⚠️ Warning: Role `{role_name}` not found on Discord server.")
+            else:
+                await ctx.send(f"⚠️ Warning: Bot lacks permission to assign role `{role_name}`.")
+        
+        # Refresh attendee data and rename the member
+        try:
+            attendees = self._get_attendees_data()
+            # Prioritize attendee_id lookup, fall back to email only if no ID
+            if attendee_id:
+                found_attendee_updated = next((att for att in attendees if att.get('id') == attendee_id), None)
+            else:
+                found_attendee_updated = next((att for att in attendees if att.get('email_address') == email), None)
+            
+            if found_attendee_updated:
+                await self._rename_member(found_attendee_updated, member, pedantic=True)
+            else:
+                log.warning(f'{context}_attendee_not_found_for_rename', attendee_id=attendee_id, email=email)
+        except Exception as e:
+            # Don't fail the entire operation if rename fails
+            log.error(f'{context}_rename_failed', member=member.name, exc_info=e)
+        
+        # Send welcome message to channel
+        await self.channel_welcome.send(
+            f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !"
+        )
+        
+        return role_assigned
+    
+    def _get_discord_username(self, member: discord.Member):
+        """Returns the Discord username, handling the discriminator properly."""
+        return f"{member.name}#{member.discriminator}" if member.discriminator != "0" else member.name
 
     async def welcome_member_helper(self, ctx, member: discord.Member, attendees_data=None, pedantic=True):
         if pedantic:
@@ -178,7 +248,7 @@ class WelcomeCog(BaseCog):
                     if current_role and current_role != target_role_name:
                         await ctx.send(
                             f"❌ Error: {member.mention} is already linked to `{email}` with role `{current_role}`. "
-                            f"Cannot change to role `{target_role_name}`. Use !create_member to update the role."
+                            f"Cannot change to role `{target_role_name}`."
                         )
                         return
                     else:
@@ -197,7 +267,7 @@ class WelcomeCog(BaseCog):
                 attendee_id = found_attendee['id']
                 update_data = {
                     'discord_unique_id': member.id,
-                    'discord_username': f"{member.name}#{member.discriminator}" if member.discriminator != "0" else member.name,
+                    'discord_username': self._get_discord_username(member),
                     'status': 'JOINED',
                     'role': target_role_name,
                 }
@@ -215,45 +285,16 @@ class WelcomeCog(BaseCog):
                 
                 log.info('link_member_success', member=member.name, member_id=member.id, email=email, attendee_id=attendee_id, role=target_role_name)
                 
-                # Assign the Discord role
-                discord_role = discord.utils.find(lambda r: r.name.lower() == target_role_name.lower(), self.guild.roles)
-                role_assigned = False
-                
-                if discord_role:
-                    if discord_role not in member.roles:
-                        try:
-                            await member.add_roles(discord_role)
-                            role_assigned = True
-                            log.info('link_member_role_assigned', member=member.name, role=discord_role.name)
-                        except Forbidden:
-                            await ctx.send(f"⚠️ Warning: Bot lacks permission to assign role `{target_role_name}`. User linked but role not assigned.")
-                            log.warning('link_member_role_permission_denied', member=member.name, role_name=target_role_name)
-                    else:
-                        role_assigned = True  # Already has the role
-                        log.info('link_member_role_already_assigned', member=member.name, role=discord_role.name)
-                else:
-                    await ctx.send(f"⚠️ Warning: Role `{target_role_name}` not found on Discord server. User linked but role not assigned.")
-                    log.warning('link_member_role_not_found', member=member.name, role_name=target_role_name)
-                
-                # Refresh attendee data and rename the member
-                attendees = self._get_attendees_data()
-                found_attendee_updated = next((att for att in attendees if att['id'] == attendee_id), None)
-                
-                if found_attendee_updated:
-                    await self._rename_member(found_attendee_updated, member, pedantic=True)
-                
-                # Send welcome message to channel
-                await self.channel_welcome.send(
-                    f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !"
-                )
+                # Finalize: assign role, rename, and welcome
+                role_assigned = await self._finalize_member_link(ctx, member, attendee_id, email, target_role_name, 'link_member')
                 
                 # Build success message
                 success_msg = f"✅ Successfully linked {member.mention} to attendee `{email}`\n"
-                success_msg += f"- Backend updated with Discord ID, username, and role\n"
+                success_msg += "- Backend updated with Discord ID, username, and role\n"
                 if role_assigned:
                     success_msg += f"- Discord role assigned: `{target_role_name}`"
                 else:
-                    success_msg += f"- Discord role NOT assigned (see warning above)"
+                    success_msg += "- Discord role NOT assigned (see warning above)"
                 
                 await ctx.send(success_msg)
                 
@@ -314,10 +355,20 @@ class WelcomeCog(BaseCog):
                 if found_attendee:
                     existing_discord_id = found_attendee.get('discord_unique_id')
                     
-                    # Case 1: Already linked to the SAME Discord user - allow update
+                    # Case 1: Already linked to the SAME Discord user - prevent role change
                     if existing_discord_id == member.id:
-                        log.info('create_member_updating_existing', member=member.name, email=email)
-                        # Continue to UPDATE section below
+                        current_role = found_attendee.get('role', '')
+                        
+                        if current_role and current_role != target_role_name:
+                            await ctx.send(
+                                f"❌ Error: {member.mention} is already linked to `{email}` with role `{current_role}`. "
+                                f"Cannot change to role `{target_role_name}`."
+                            )
+                            return
+                        else:
+                            # Allow name updates if role stays the same
+                            log.info('create_member_updating_existing', member=member.name, email=email)
+                            # Continue to UPDATE section below
                     
                     # Case 2: Linked to a DIFFERENT Discord user - fail
                     elif existing_discord_id:
@@ -340,7 +391,7 @@ class WelcomeCog(BaseCog):
                         'first_name': first_name,
                         'last_name': last_name,
                         'discord_unique_id': member.id,
-                        'discord_username': f"{member.name}#{member.discriminator}" if member.discriminator != "0" else member.name,
+                        'discord_username': self._get_discord_username(member),
                         'status': 'JOINED',
                         'role': target_role_name,
                     }
@@ -366,7 +417,7 @@ class WelcomeCog(BaseCog):
                         'last_name': last_name,
                         'email_address': email,
                         'discord_unique_id': member.id,
-                        'discord_username': f"{member.name}#{member.discriminator}" if member.discriminator != "0" else member.name,
+                        'discord_username': self._get_discord_username(member),
                         'status': 'JOINED',
                         'role': target_role_name,
                     }
@@ -386,53 +437,25 @@ class WelcomeCog(BaseCog):
                     attendee_id = response_data.get('id')
                     
                     if not attendee_id:
-                        await ctx.send(f"⚠️ Warning: Attendee created but no ID returned. Response: {response_data}")
+                        await ctx.send(f"⚠️ Warning: Attendee created but no ID returned. Will use email for lookup. Response: {response_data}")
                         log.warning('create_member_no_id', response=response_data)
+                        attendee_id = None  # Explicitly set to None for clarity
                     
                     log.info('create_member_created', member=member.name, member_id=member.id, email=email, attendee_id=attendee_id)
                     action_taken = "created and linked"
                 
-                # Assign the Discord role
-                discord_role = discord.utils.find(lambda r: r.name.lower() == target_role_name.lower(), self.guild.roles)
-                role_assigned = False
-                
-                if discord_role:
-                    if discord_role not in member.roles:
-                        try:
-                            await member.add_roles(discord_role)
-                            role_assigned = True
-                            log.info('create_member_role_assigned', member=member.name, role=discord_role.name)
-                        except Forbidden:
-                            await ctx.send(f"⚠️ Warning: Bot lacks permission to assign role `{target_role_name}`.")
-                            log.warning('create_member_role_permission_denied', member=member.name, role_name=target_role_name)
-                    else:
-                        role_assigned = True
-                        log.info('create_member_role_already_assigned', member=member.name, role=discord_role.name)
-                else:
-                    await ctx.send(f"⚠️ Warning: Role `{target_role_name}` not found on Discord server.")
-                    log.warning('create_member_role_not_found', member=member.name, role_name=target_role_name)
-                
-                # Refresh attendee data and rename the member
-                attendees = self._get_attendees_data()
-                found_attendee_updated = next((att for att in attendees if att.get('email_address') == email), None)
-                
-                if found_attendee_updated:
-                    await self._rename_member(found_attendee_updated, member, pedantic=True)
-                
-                # Send welcome message to channel
-                await self.channel_welcome.send(
-                    f"Bienvenue à {member.mention} sur le Discord du {self.settings.EVENT_NAME} !"
-                )
+                # Finalize: assign role, rename, and welcome
+                role_assigned = await self._finalize_member_link(ctx, member, attendee_id, email, target_role_name, 'create_member')
                 
                 # Build success message
                 success_msg = f"✅ Successfully {action_taken} {member.mention}\n"
                 success_msg += f"- Name: {first_name} {last_name}\n"
                 success_msg += f"- Email: {email}\n"
-                success_msg += f"- Backend status: JOINED\n"
+                success_msg += "- Backend status: JOINED\n"
                 if role_assigned:
                     success_msg += f"- Discord role assigned: `{target_role_name}`"
                 else:
-                    success_msg += f"- Discord role NOT assigned (see warning above)"
+                    success_msg += "- Discord role NOT assigned (see warning above)"
                 
                 await ctx.send(success_msg)
                 
