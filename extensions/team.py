@@ -273,6 +273,103 @@ class TeamCog(BaseCog):
 
         await utils_cog.bot_log_message(f'Creation team <@&{team_role.id}> OK')
 
+    @commands.command(name='teamfix')
+    @commands.check(perms.is_support_user)
+    async def teamfix(self, ctx, nom_de_lequipe: str):
+        """
+        Fix permissions for an existing team (role and channels).
+        This will ensure the team role exists, and channels have correct permissions.
+        """
+        log_team = log.bind(command='teamfix', name=nom_de_lequipe)
+
+        message = ctx.message
+        author = ctx.author
+        server: discord.Guild = ctx.guild
+        role_names = [r.name for r in author.roles]
+
+        if self.settings.ADMIN_ROLE not in role_names:
+            await message.add_reaction(reactions.FAILURE)
+            await ctx.send(f"Seuls les admins ({self.settings.ADMIN_ROLE}) peuvent faire cette action!")
+            return
+
+        # Handle role mention or name
+        role = None
+        if not nom_de_lequipe.startswith("<@&"):
+            role = discord.utils.find(lambda r: r.name == nom_de_lequipe, server.roles)
+        else:
+            role = discord.utils.get(server.roles, id=int(nom_de_lequipe[3:-1]))
+            if role:
+                nom_de_lequipe = role.name
+
+        if role is None:
+            await message.add_reaction(reactions.FAILURE)
+            await ctx.send(f"❌ Rôle `{nom_de_lequipe}` non trouvé!")
+            return
+
+        if not role.name.startswith(self.settings.TEAM_PREFIX):
+            await message.add_reaction(reactions.FAILURE)
+            await ctx.send(f"❌ Le nom d'équipe doit commencer par '{self.settings.TEAM_PREFIX}'!")
+            return
+
+        log_team.info('fixing team permissions')
+
+        # Initialize channel variables
+        text_channel = None
+        voice_channel = None
+
+        async with progress_message(ctx, f'fixing {role.name}'):
+            # Ensure role is mentionable
+            if not role.mentionable:
+                try:
+                    await role.edit(mentionable=True, reason="Fixed by teamfix command")
+                    log_team.info('role set to mentionable')
+                except discord.Forbidden:
+                    log_team.error('failed to edit role - insufficient permissions')
+                    await message.add_reaction(reactions.FAILURE)
+                    await ctx.send(f"❌ Permissions insuffisantes pour modifier le rôle!")
+                    return
+
+            team_cat = self.category_participants
+
+            if team_cat is None:
+                await message.add_reaction(reactions.FAILURE)
+                await ctx.send(f"❌ Erreur! Catégorie '{self.settings.TEAM_CATEGORY}' introuvable")
+                return
+
+            # Find and fix text channel permissions
+            text_channel = discord.utils.find(
+                lambda c: c.name.lower() == role.name.lower(),
+                team_cat.text_channels
+            )
+
+            if text_channel:
+                log_team.info('fixing text channel permissions')
+                await self._set_text_channel_permissions(text_channel, role)
+            else:
+                log_team.warning('text channel not found')
+
+            # Find and fix voice channel permissions
+            voice_channel = discord.utils.find(
+                lambda c: c.name.lower() == role.name.lower(),
+                team_cat.voice_channels
+            )
+
+            if voice_channel:
+                log_team.info('fixing voice channel permissions')
+                await self._set_voice_channel_permissions(voice_channel, role)
+            else:
+                log_team.warning('voice channel not found')
+
+        await message.add_reaction(reactions.SUCCESS)
+        
+        result_msg = f"✅ Permissions fixées pour l'équipe **{role.name}**\n"
+        result_msg += f"- Rôle: {'✓' if role.mentionable else '⚠️'}\n"
+        result_msg += f"- Canal texte: {'✓' if text_channel else '❌ Non trouvé'}\n"
+        result_msg += f"- Canal vocal: {'✓' if voice_channel else '❌ Non trouvé'}"
+        
+        await ctx.send(result_msg)
+        log_team.info('team permissions fixed')
+
     async def _ensure_team_lead_role(self, serv_roles, server):
         cdp_role = None
         if self.settings.PROJECT_LEAD_ROLE not in [r.name for r in serv_roles]:
@@ -409,37 +506,59 @@ class TeamCog(BaseCog):
             await leader_team.add_roles(role_team)
             await leader_team.add_roles(self.role_chef)
 
+    async def _set_text_channel_permissions(self, text_channel, role_team):
+        """Set correct permissions on a text channel for a team."""
+        # Hide from @everyone
+        everyone_perms = text_channel.overwrites_for(self.guild.default_role)
+        everyone_perms.read_messages = False
+        everyone_perms.view_channel = False
+        await text_channel.set_permissions(self.guild.default_role, overwrite=everyone_perms)
+
+        # Allow team members
+        team_perms = text_channel.overwrites_for(role_team)
+        team_perms.send_messages = True
+        team_perms.read_messages = True
+        team_perms.attach_files = True
+        team_perms.embed_links = True
+        team_perms.read_message_history = True
+        team_perms.view_channel = True
+
+        await text_channel.set_permissions(role_team, overwrite=team_perms)
+
+    async def _set_voice_channel_permissions(self, voice_channel, role_team):
+        """Set correct permissions on a voice channel for a team."""
+        # Hide from @everyone
+        everyone_perms = voice_channel.overwrites_for(self.guild.default_role)
+        everyone_perms.view_channel = False
+        everyone_perms.connect = False
+        await voice_channel.set_permissions(self.guild.default_role, overwrite=everyone_perms)
+
+        # Allow team members
+        team_perms = voice_channel.overwrites_for(role_team)
+        team_perms.connect = True
+        team_perms.speak = True
+        team_perms.view_channel = True
+        team_perms.stream = True
+        team_perms.use_voice_activation = True
+
+        await voice_channel.set_permissions(role_team, overwrite=team_perms)
+
     async def _create_channels_for_team(self, log_team, name_team, role_team):
         text_channel_team = discord.utils.find(lambda r: r.name.lower() == name_team.lower(),
                                                self.category_participants.text_channels)
         if text_channel_team is None:
             log_team.info('create text channel')
             text_channel_team = await self.category_participants.create_text_channel(name_team)
-
-            perms = text_channel_team.overwrites_for(role_team)
-            perms.send_messages = True
-            perms.read_messages = True
-            perms.attach_files = True
-            perms.embed_links = True
-            perms.read_message_history = True
-
-            await text_channel_team.set_permissions(role_team, overwrite=perms)
+            await self._set_text_channel_permissions(text_channel_team, role_team)
         else:
             log_team.info('text channel exists')
+            
         voice_channel_team = discord.utils.find(lambda r: r.name.lower() == name_team.lower(),
                                                 self.category_participants.voice_channels)
         if voice_channel_team is None:
             log_team.info('create voice channel')
             voice_channel_team = await self.category_participants.create_voice_channel(name_team.lower())
-
-            perms = voice_channel_team.overwrites_for(role_team)
-            perms.connect = True
-            perms.speak = True
-            perms.view_channel = True
-            perms.stream = True
-            perms.use_voice_activation = True
-
-            await voice_channel_team.set_permissions(role_team, overwrite=perms)
+            await self._set_voice_channel_permissions(voice_channel_team, role_team)
         else:
             log_team.info('voice channel exists')
 

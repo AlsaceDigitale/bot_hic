@@ -131,7 +131,12 @@ Notes : le comportement de vote (limite de votes, acceptation d'emojis) dépend 
     - nom_de_lequipe (str)
     - chef_de_projet (discord.Member)
     - members (list of discord.Member)
-  - Description : crée le rôle d'équipe, crée un canal textuel et vocal dans la catégorie configurée (`BOT_TEAM_CATEGORY`), assigne le chef de projet et les membres. Requiert `is_support_user` et rôle admin.
+  - Description : crée le rôle d'équipe, crée un canal textuel et vocal dans la catégorie configurée (`BOT_TEAM_CATEGORY`), assigne le chef de projet et les membres. Les canaux sont configurés pour être privés (visibles uniquement par les membres de l'équipe). Requiert `is_support_user` et rôle admin.
+
+- teamfix
+  - Usage : `!teamfix <nom_de_lequipe|@mention_de_role>`
+  - Paramètres : nom_de_lequipe (str) : soit le nom du rôle, soit une mention
+  - Description : corrige les permissions d'une équipe existante. Rend le rôle mentionnable et applique les permissions correctes aux canaux texte/vocal (privés, visibles uniquement par les membres de l'équipe). Utile pour réparer les permissions après une erreur ou un changement de configuration. Requiert `is_support_user` et rôle admin.
 
 - teamcoachadd
   - Usage : `!teamcoachadd <@EquipeRole> @membre`
