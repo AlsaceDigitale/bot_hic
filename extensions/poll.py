@@ -12,7 +12,27 @@ log = structlog.get_logger()
 
 class PollCog(BaseCog):
     """
-    Sondages
+    Sondages - Poll Management System
+    
+    This cog manages polls/votes in a dedicated voting channel.
+    
+    Voting Permissions:
+    --------------------
+    Users must have one of the roles defined in the BOT_VOTING_ROLES environment variable
+    to be able to vote in polls. 
+    
+    Configuration:
+    - BOT_VOTING_ROLES: Comma-separated list of role names that can vote
+      Example: BOT_VOTING_ROLES="Participant,Coach,Jury"
+    - If BOT_VOTING_ROLES is not defined, the bot falls back to BOT_PARTICIPANT_ROLE
+      (default: "Participant")
+    
+    Commands:
+    ---------
+    - !new_poll: Create a new poll (Admin only)
+    - !close_poll: Close a poll and show results (Admin only)
+    - !reset_poll: Reset all votes to zero (Admin only)
+    - !destroy_poll: Delete a poll permanently (Admin only)
     """
     REACTIONS_YESNO = ['✅', '❌']
     REACTIONS_MULTI = ['🇦', '🇧', '🇨', '🇩', '🇪', '🇫', '🇬', '🇭', '🇮', '🇯', '🇰', '🇱', '🇲', '🇳', '🇴', '🇵', '🇶', '🇷', '🇸',
@@ -233,7 +253,11 @@ class PollCog(BaseCog):
         number_of_votes = 0
 
         role_names = [r.name for r in user.roles]
-        if self.settings.PARTICIPANT_ROLE not in role_names:
+        # Check if user has any of the voting roles defined in settings
+        # VOTING_ROLES is a list that defaults to [PARTICIPANT_ROLE] if BOT_VOTING_ROLES env var is not set
+        has_voting_permission = any(role_name in self.settings.VOTING_ROLES for role_name in role_names)
+        
+        if not has_voting_permission:
             await reaction.remove(user)
             await dm_channel.send(f'<@!{user.id}> n\'a pas le droit de vote')
             return

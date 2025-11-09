@@ -30,6 +30,14 @@ class Settings:
         self.CHANNEL_MSG_AUTO = os.getenv('BOT_CHANNEL_MSG_AUTO', 'msg_auto')
         self.CHANNEL_VOTE = os.getenv('BOT_CHANNEL_VOTE', 'votes')
         self.PARTICIPANT_ROLE = os.getenv('BOT_PARTICIPANT_ROLE', 'Participant')
+        # VOTING_ROLES: Comma-separated list of role names that can vote in polls
+        # If not defined, falls back to PARTICIPANT_ROLE
+        # Example: BOT_VOTING_ROLES="Participant,Coach,Jury"
+        voting_roles_env = os.getenv('BOT_VOTING_ROLES', None)
+        if voting_roles_env:
+            self.VOTING_ROLES = [role.strip() for role in voting_roles_env.split(',')]
+        else:
+            self.VOTING_ROLES = [self.PARTICIPANT_ROLE]
         self.TEAM_CATEGORY = os.getenv('BOT_TEAM_CATEGORY', 'Participants')
         self.JURY_ROLE = os.getenv('BOT_JURY_ROLE', 'Jury')
         self.URL_API = os.getenv('BOT_URL_API', 'https://hic-manager-dev.osc-fr1.scalingo.io')
